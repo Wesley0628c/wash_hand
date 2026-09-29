@@ -153,18 +153,21 @@ class WashHandRuleClassifier:
                 scores["wrist"] = grip_strength
 
             # ── 2. [大 Thumb] vs [弓 Knuckles] ────────────────────────────
-            # 【大】(旋轉搓洗拇指) 判斷條件：
-            # (1) 被握手四指空中高舉 (Open Hand In Air)：一手四指伸直 (max_curl > 150.0) 且開展，握持手握拳 (min_curl < 125.0)
-            # (2) 大拇指被握 (Thumb Inside Fist)：大拇指尖緊貼掌心/虎口 (min_p_to_th < 0.75 或 min_web_th < 0.75) 且另一手四指伸展 (max_curl > 140.0)
-            is_open_hand_in_air = (max_curl > 150.0 and min_curl < 125.0 and (max_spread > 0.22 or curl_diff > 25.0))
-            is_thumb_in_fist = ((min_p_to_th < 0.75 or min_web_th < 0.75) and max_curl > 140.0 and min_curl < 135.0)
-            is_thumb_wrapped = (is_open_hand_in_air or is_thumb_in_fist)
+            # 【大】(旋轉搓洗拇指): 
+            # 核心特徵：大拇指尖被緊包在對側拳心/虎口內 (min_p_to_th < 0.65 或 min_web_th < 0.65)，
+            # 且指節未壓在對側掌心上 (min_kn_to_p > min_p_to_th + 0.08)，被握手四指展開 (max_curl > 140.0)
+            is_thumb_wrapped = (
+                (min_p_to_th < 0.65 or min_web_th < 0.65)
+                and (min_kn_to_p > min_p_to_th + 0.08 or min_kn_to_p > 0.78)
+                and max_curl > 140.0
+                and min_curl < 135.0
+            )
 
             # 【弓】(指背搓掌心): 
-            # 核心特徵：彎曲手的 4 指指節 (PIP) 緊貼平掌掌心 (min_kn_to_p < 0.85)，且非大拇指握持
+            # 核心特徵：彎曲手的 4 指指節 (PIP) 緊貼平掌掌心 (min_kn_to_p < 0.82)，且非大拇指被深握
             is_knuckle_on_palm = (
                 min_curl < 142.0
-                and min_kn_to_p < 0.85
+                and min_kn_to_p < 0.82
                 and not is_thumb_wrapped
                 and palm_dist < 2.0
             )
@@ -172,9 +175,9 @@ class WashHandRuleClassifier:
             # 大評分：鎖定洗大拇指
             if is_thumb_wrapped and scores["wrist"] <= 0.0:
                 thumb_score = 3.6
-                if is_open_hand_in_air:
+                if max_curl > 150.0 and min_curl < 120.0:
                     thumb_score = 3.8
-                elif min_p_to_th < 0.65 or min_web_th < 0.65:
+                elif min_p_to_th < 0.55 or min_web_th < 0.55:
                     thumb_score = 3.7
                 scores["thumb"] = thumb_score
 
