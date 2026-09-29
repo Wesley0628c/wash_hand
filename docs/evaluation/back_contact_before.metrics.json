@@ -1,0 +1,1408 @@
+{
+  "label_source": "clip_filename_including_transitions",
+  "independent_test_set": false,
+  "labels": [
+    "other",
+    "inside",
+    "outside",
+    "interlace",
+    "knuckles",
+    "thumb",
+    "fingertips",
+    "wrist"
+  ],
+  "groups": {
+    "all": {
+      "raw": {
+        "frames": 2689,
+        "correct": 732,
+        "other": 653,
+        "wrong": 1304,
+        "classes": {
+          "other": {
+            "tp": 0,
+            "support": 0,
+            "predicted": 653,
+            "precision": 0.0,
+            "recall": null,
+            "f1": 0.0
+          },
+          "inside": {
+            "tp": 312,
+            "support": 377,
+            "predicted": 1129,
+            "precision": 0.2763507528786537,
+            "recall": 0.8275862068965517,
+            "f1": 0.41434262948207173
+          },
+          "outside": {
+            "tp": 43,
+            "support": 417,
+            "predicted": 117,
+            "precision": 0.36752136752136755,
+            "recall": 0.10311750599520383,
+            "f1": 0.16104868913857678
+          },
+          "interlace": {
+            "tp": 17,
+            "support": 336,
+            "predicted": 45,
+            "precision": 0.37777777777777777,
+            "recall": 0.050595238095238096,
+            "f1": 0.08923884514435695
+          },
+          "knuckles": {
+            "tp": 82,
+            "support": 424,
+            "predicted": 211,
+            "precision": 0.3886255924170616,
+            "recall": 0.19339622641509435,
+            "f1": 0.25826771653543307
+          },
+          "thumb": {
+            "tp": 48,
+            "support": 415,
+            "predicted": 136,
+            "precision": 0.35294117647058826,
+            "recall": 0.11566265060240964,
+            "f1": 0.17422867513611615
+          },
+          "fingertips": {
+            "tp": 151,
+            "support": 385,
+            "predicted": 265,
+            "precision": 0.569811320754717,
+            "recall": 0.3922077922077922,
+            "f1": 0.4646153846153846
+          },
+          "wrist": {
+            "tp": 79,
+            "support": 335,
+            "predicted": 133,
+            "precision": 0.5939849624060151,
+            "recall": 0.23582089552238805,
+            "f1": 0.33760683760683763
+          }
+        },
+        "confusion_matrix": {
+          "other": {
+            "other": 0,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "inside": {
+            "other": 32,
+            "inside": 312,
+            "outside": 15,
+            "interlace": 2,
+            "knuckles": 6,
+            "thumb": 2,
+            "fingertips": 8,
+            "wrist": 0
+          },
+          "outside": {
+            "other": 146,
+            "inside": 200,
+            "outside": 43,
+            "interlace": 18,
+            "knuckles": 2,
+            "thumb": 0,
+            "fingertips": 8,
+            "wrist": 0
+          },
+          "interlace": {
+            "other": 101,
+            "inside": 185,
+            "outside": 19,
+            "interlace": 17,
+            "knuckles": 2,
+            "thumb": 1,
+            "fingertips": 5,
+            "wrist": 6
+          },
+          "knuckles": {
+            "other": 88,
+            "inside": 115,
+            "outside": 8,
+            "interlace": 6,
+            "knuckles": 82,
+            "thumb": 49,
+            "fingertips": 34,
+            "wrist": 42
+          },
+          "thumb": {
+            "other": 73,
+            "inside": 137,
+            "outside": 2,
+            "interlace": 2,
+            "knuckles": 107,
+            "thumb": 48,
+            "fingertips": 40,
+            "wrist": 6
+          },
+          "fingertips": {
+            "other": 129,
+            "inside": 89,
+            "outside": 15,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 1,
+            "fingertips": 151,
+            "wrist": 0
+          },
+          "wrist": {
+            "other": 84,
+            "inside": 91,
+            "outside": 15,
+            "interlace": 0,
+            "knuckles": 12,
+            "thumb": 35,
+            "fingertips": 19,
+            "wrist": 79
+          }
+        }
+      },
+      "display": {
+        "frames": 2689,
+        "correct": 744,
+        "other": 1045,
+        "wrong": 900,
+        "classes": {
+          "other": {
+            "tp": 0,
+            "support": 0,
+            "predicted": 1045,
+            "precision": 0.0,
+            "recall": null,
+            "f1": 0.0
+          },
+          "inside": {
+            "tp": 314,
+            "support": 377,
+            "predicted": 972,
+            "precision": 0.3230452674897119,
+            "recall": 0.8328912466843501,
+            "f1": 0.46553002223869533
+          },
+          "outside": {
+            "tp": 26,
+            "support": 417,
+            "predicted": 45,
+            "precision": 0.5777777777777777,
+            "recall": 0.06235011990407674,
+            "f1": 0.11255411255411256
+          },
+          "interlace": {
+            "tp": 17,
+            "support": 336,
+            "predicted": 30,
+            "precision": 0.5666666666666667,
+            "recall": 0.050595238095238096,
+            "f1": 0.09289617486338798
+          },
+          "knuckles": {
+            "tp": 53,
+            "support": 424,
+            "predicted": 141,
+            "precision": 0.375886524822695,
+            "recall": 0.125,
+            "f1": 0.18761061946902655
+          },
+          "thumb": {
+            "tp": 42,
+            "support": 415,
+            "predicted": 71,
+            "precision": 0.5915492957746479,
+            "recall": 0.10120481927710843,
+            "f1": 0.1728395061728395
+          },
+          "fingertips": {
+            "tp": 197,
+            "support": 385,
+            "predicted": 243,
+            "precision": 0.8106995884773662,
+            "recall": 0.5116883116883116,
+            "f1": 0.6273885350318471
+          },
+          "wrist": {
+            "tp": 95,
+            "support": 335,
+            "predicted": 142,
+            "precision": 0.6690140845070423,
+            "recall": 0.2835820895522388,
+            "f1": 0.39832285115303984
+          }
+        },
+        "confusion_matrix": {
+          "other": {
+            "other": 0,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "inside": {
+            "other": 63,
+            "inside": 314,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "outside": {
+            "other": 192,
+            "inside": 186,
+            "outside": 26,
+            "interlace": 13,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "interlace": {
+            "other": 172,
+            "inside": 147,
+            "outside": 0,
+            "interlace": 17,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "knuckles": {
+            "other": 193,
+            "inside": 101,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 53,
+            "thumb": 14,
+            "fingertips": 16,
+            "wrist": 47
+          },
+          "thumb": {
+            "other": 126,
+            "inside": 129,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 88,
+            "thumb": 42,
+            "fingertips": 30,
+            "wrist": 0
+          },
+          "fingertips": {
+            "other": 145,
+            "inside": 36,
+            "outside": 7,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 197,
+            "wrist": 0
+          },
+          "wrist": {
+            "other": 154,
+            "inside": 59,
+            "outside": 12,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 15,
+            "fingertips": 0,
+            "wrist": 95
+          }
+        }
+      },
+      "credit": {
+        "frames": 2689,
+        "correct": 133,
+        "other": 2482,
+        "wrong": 74,
+        "classes": {
+          "other": {
+            "tp": 0,
+            "support": 0,
+            "predicted": 2482,
+            "precision": 0.0,
+            "recall": null,
+            "f1": 0.0
+          },
+          "inside": {
+            "tp": 7,
+            "support": 377,
+            "predicted": 76,
+            "precision": 0.09210526315789473,
+            "recall": 0.01856763925729443,
+            "f1": 0.03090507726269316
+          },
+          "outside": {
+            "tp": 0,
+            "support": 417,
+            "predicted": 0,
+            "precision": null,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "interlace": {
+            "tp": 0,
+            "support": 336,
+            "predicted": 0,
+            "precision": null,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "knuckles": {
+            "tp": 5,
+            "support": 424,
+            "predicted": 6,
+            "precision": 0.8333333333333334,
+            "recall": 0.01179245283018868,
+            "f1": 0.023255813953488372
+          },
+          "thumb": {
+            "tp": 4,
+            "support": 415,
+            "predicted": 4,
+            "precision": 1.0,
+            "recall": 0.00963855421686747,
+            "f1": 0.01909307875894988
+          },
+          "fingertips": {
+            "tp": 83,
+            "support": 385,
+            "predicted": 83,
+            "precision": 1.0,
+            "recall": 0.21558441558441557,
+            "f1": 0.3547008547008547
+          },
+          "wrist": {
+            "tp": 34,
+            "support": 335,
+            "predicted": 38,
+            "precision": 0.8947368421052632,
+            "recall": 0.10149253731343283,
+            "f1": 0.18230563002680966
+          }
+        },
+        "confusion_matrix": {
+          "other": {
+            "other": 0,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "inside": {
+            "other": 370,
+            "inside": 7,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "outside": {
+            "other": 376,
+            "inside": 41,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "interlace": {
+            "other": 308,
+            "inside": 28,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "knuckles": {
+            "other": 415,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 5,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 4
+          },
+          "thumb": {
+            "other": 410,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 1,
+            "thumb": 4,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "fingertips": {
+            "other": 302,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 83,
+            "wrist": 0
+          },
+          "wrist": {
+            "other": 301,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 34
+          }
+        }
+      }
+    },
+    "sample_v1": {
+      "raw": {
+        "frames": 1494,
+        "correct": 362,
+        "other": 481,
+        "wrong": 651,
+        "classes": {
+          "other": {
+            "tp": 0,
+            "support": 0,
+            "predicted": 481,
+            "precision": 0.0,
+            "recall": null,
+            "f1": 0.0
+          },
+          "inside": {
+            "tp": 180,
+            "support": 229,
+            "predicted": 580,
+            "precision": 0.3103448275862069,
+            "recall": 0.7860262008733624,
+            "f1": 0.44499381953028433
+          },
+          "outside": {
+            "tp": 21,
+            "support": 257,
+            "predicted": 62,
+            "precision": 0.3387096774193548,
+            "recall": 0.08171206225680934,
+            "f1": 0.13166144200626959
+          },
+          "interlace": {
+            "tp": 15,
+            "support": 207,
+            "predicted": 21,
+            "precision": 0.7142857142857143,
+            "recall": 0.07246376811594203,
+            "f1": 0.13157894736842105
+          },
+          "knuckles": {
+            "tp": 29,
+            "support": 219,
+            "predicted": 99,
+            "precision": 0.29292929292929293,
+            "recall": 0.1324200913242009,
+            "f1": 0.18238993710691823
+          },
+          "thumb": {
+            "tp": 4,
+            "support": 206,
+            "predicted": 59,
+            "precision": 0.06779661016949153,
+            "recall": 0.019417475728155338,
+            "f1": 0.03018867924528302
+          },
+          "fingertips": {
+            "tp": 102,
+            "support": 210,
+            "predicted": 164,
+            "precision": 0.6219512195121951,
+            "recall": 0.4857142857142857,
+            "f1": 0.5454545454545454
+          },
+          "wrist": {
+            "tp": 11,
+            "support": 166,
+            "predicted": 28,
+            "precision": 0.39285714285714285,
+            "recall": 0.06626506024096386,
+            "f1": 0.1134020618556701
+          }
+        },
+        "confusion_matrix": {
+          "other": {
+            "other": 0,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "inside": {
+            "other": 30,
+            "inside": 180,
+            "outside": 10,
+            "interlace": 0,
+            "knuckles": 6,
+            "thumb": 2,
+            "fingertips": 1,
+            "wrist": 0
+          },
+          "outside": {
+            "other": 114,
+            "inside": 114,
+            "outside": 21,
+            "interlace": 0,
+            "knuckles": 2,
+            "thumb": 0,
+            "fingertips": 6,
+            "wrist": 0
+          },
+          "interlace": {
+            "other": 79,
+            "inside": 91,
+            "outside": 11,
+            "interlace": 15,
+            "knuckles": 2,
+            "thumb": 1,
+            "fingertips": 2,
+            "wrist": 6
+          },
+          "knuckles": {
+            "other": 81,
+            "inside": 36,
+            "outside": 8,
+            "interlace": 6,
+            "knuckles": 29,
+            "thumb": 24,
+            "fingertips": 28,
+            "wrist": 7
+          },
+          "thumb": {
+            "other": 49,
+            "inside": 86,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 51,
+            "thumb": 4,
+            "fingertips": 12,
+            "wrist": 4
+          },
+          "fingertips": {
+            "other": 52,
+            "inside": 48,
+            "outside": 8,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 102,
+            "wrist": 0
+          },
+          "wrist": {
+            "other": 76,
+            "inside": 25,
+            "outside": 4,
+            "interlace": 0,
+            "knuckles": 9,
+            "thumb": 28,
+            "fingertips": 13,
+            "wrist": 11
+          }
+        }
+      },
+      "display": {
+        "frames": 1494,
+        "correct": 315,
+        "other": 800,
+        "wrong": 379,
+        "classes": {
+          "other": {
+            "tp": 0,
+            "support": 0,
+            "predicted": 800,
+            "precision": 0.0,
+            "recall": null,
+            "f1": 0.0
+          },
+          "inside": {
+            "tp": 170,
+            "support": 229,
+            "predicted": 449,
+            "precision": 0.37861915367483295,
+            "recall": 0.74235807860262,
+            "f1": 0.5014749262536873
+          },
+          "outside": {
+            "tp": 0,
+            "support": 257,
+            "predicted": 0,
+            "precision": null,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "interlace": {
+            "tp": 17,
+            "support": 207,
+            "predicted": 17,
+            "precision": 1.0,
+            "recall": 0.0821256038647343,
+            "f1": 0.15178571428571427
+          },
+          "knuckles": {
+            "tp": 5,
+            "support": 219,
+            "predicted": 52,
+            "precision": 0.09615384615384616,
+            "recall": 0.0228310502283105,
+            "f1": 0.03690036900369004
+          },
+          "thumb": {
+            "tp": 0,
+            "support": 206,
+            "predicted": 29,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "fingertips": {
+            "tp": 123,
+            "support": 210,
+            "predicted": 147,
+            "precision": 0.8367346938775511,
+            "recall": 0.5857142857142857,
+            "f1": 0.6890756302521008
+          },
+          "wrist": {
+            "tp": 0,
+            "support": 166,
+            "predicted": 0,
+            "precision": null,
+            "recall": 0.0,
+            "f1": 0.0
+          }
+        },
+        "confusion_matrix": {
+          "other": {
+            "other": 0,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "inside": {
+            "other": 59,
+            "inside": 170,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "outside": {
+            "other": 158,
+            "inside": 99,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "interlace": {
+            "other": 133,
+            "inside": 57,
+            "outside": 0,
+            "interlace": 17,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "knuckles": {
+            "other": 170,
+            "inside": 14,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 5,
+            "thumb": 14,
+            "fingertips": 16,
+            "wrist": 0
+          },
+          "thumb": {
+            "other": 78,
+            "inside": 73,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 47,
+            "thumb": 0,
+            "fingertips": 8,
+            "wrist": 0
+          },
+          "fingertips": {
+            "other": 51,
+            "inside": 36,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 123,
+            "wrist": 0
+          },
+          "wrist": {
+            "other": 151,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 15,
+            "fingertips": 0,
+            "wrist": 0
+          }
+        }
+      },
+      "credit": {
+        "frames": 1494,
+        "correct": 64,
+        "other": 1408,
+        "wrong": 22,
+        "classes": {
+          "other": {
+            "tp": 0,
+            "support": 0,
+            "predicted": 1408,
+            "precision": 0.0,
+            "recall": null,
+            "f1": 0.0
+          },
+          "inside": {
+            "tp": 1,
+            "support": 229,
+            "predicted": 22,
+            "precision": 0.045454545454545456,
+            "recall": 0.004366812227074236,
+            "f1": 0.00796812749003984
+          },
+          "outside": {
+            "tp": 0,
+            "support": 257,
+            "predicted": 0,
+            "precision": null,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "interlace": {
+            "tp": 0,
+            "support": 207,
+            "predicted": 0,
+            "precision": null,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "knuckles": {
+            "tp": 0,
+            "support": 219,
+            "predicted": 1,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "thumb": {
+            "tp": 0,
+            "support": 206,
+            "predicted": 0,
+            "precision": null,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "fingertips": {
+            "tp": 63,
+            "support": 210,
+            "predicted": 63,
+            "precision": 1.0,
+            "recall": 0.3,
+            "f1": 0.46153846153846156
+          },
+          "wrist": {
+            "tp": 0,
+            "support": 166,
+            "predicted": 0,
+            "precision": null,
+            "recall": 0.0,
+            "f1": 0.0
+          }
+        },
+        "confusion_matrix": {
+          "other": {
+            "other": 0,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "inside": {
+            "other": 228,
+            "inside": 1,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "outside": {
+            "other": 257,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "interlace": {
+            "other": 186,
+            "inside": 21,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "knuckles": {
+            "other": 219,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "thumb": {
+            "other": 205,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 1,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "fingertips": {
+            "other": 147,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 63,
+            "wrist": 0
+          },
+          "wrist": {
+            "other": 166,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          }
+        }
+      }
+    },
+    "sample_v2": {
+      "raw": {
+        "frames": 1195,
+        "correct": 370,
+        "other": 172,
+        "wrong": 653,
+        "classes": {
+          "other": {
+            "tp": 0,
+            "support": 0,
+            "predicted": 172,
+            "precision": 0.0,
+            "recall": null,
+            "f1": 0.0
+          },
+          "inside": {
+            "tp": 132,
+            "support": 148,
+            "predicted": 549,
+            "precision": 0.24043715846994534,
+            "recall": 0.8918918918918919,
+            "f1": 0.3787661406025825
+          },
+          "outside": {
+            "tp": 22,
+            "support": 160,
+            "predicted": 55,
+            "precision": 0.4,
+            "recall": 0.1375,
+            "f1": 0.20465116279069767
+          },
+          "interlace": {
+            "tp": 2,
+            "support": 129,
+            "predicted": 24,
+            "precision": 0.08333333333333333,
+            "recall": 0.015503875968992248,
+            "f1": 0.026143790849673203
+          },
+          "knuckles": {
+            "tp": 53,
+            "support": 205,
+            "predicted": 112,
+            "precision": 0.4732142857142857,
+            "recall": 0.25853658536585367,
+            "f1": 0.334384858044164
+          },
+          "thumb": {
+            "tp": 44,
+            "support": 209,
+            "predicted": 77,
+            "precision": 0.5714285714285714,
+            "recall": 0.21052631578947367,
+            "f1": 0.3076923076923077
+          },
+          "fingertips": {
+            "tp": 49,
+            "support": 175,
+            "predicted": 101,
+            "precision": 0.48514851485148514,
+            "recall": 0.28,
+            "f1": 0.35507246376811596
+          },
+          "wrist": {
+            "tp": 68,
+            "support": 169,
+            "predicted": 105,
+            "precision": 0.6476190476190476,
+            "recall": 0.40236686390532544,
+            "f1": 0.49635036496350365
+          }
+        },
+        "confusion_matrix": {
+          "other": {
+            "other": 0,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "inside": {
+            "other": 2,
+            "inside": 132,
+            "outside": 5,
+            "interlace": 2,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 7,
+            "wrist": 0
+          },
+          "outside": {
+            "other": 32,
+            "inside": 86,
+            "outside": 22,
+            "interlace": 18,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 2,
+            "wrist": 0
+          },
+          "interlace": {
+            "other": 22,
+            "inside": 94,
+            "outside": 8,
+            "interlace": 2,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 3,
+            "wrist": 0
+          },
+          "knuckles": {
+            "other": 7,
+            "inside": 79,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 53,
+            "thumb": 25,
+            "fingertips": 6,
+            "wrist": 35
+          },
+          "thumb": {
+            "other": 24,
+            "inside": 51,
+            "outside": 2,
+            "interlace": 2,
+            "knuckles": 56,
+            "thumb": 44,
+            "fingertips": 28,
+            "wrist": 2
+          },
+          "fingertips": {
+            "other": 77,
+            "inside": 41,
+            "outside": 7,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 1,
+            "fingertips": 49,
+            "wrist": 0
+          },
+          "wrist": {
+            "other": 8,
+            "inside": 66,
+            "outside": 11,
+            "interlace": 0,
+            "knuckles": 3,
+            "thumb": 7,
+            "fingertips": 6,
+            "wrist": 68
+          }
+        }
+      },
+      "display": {
+        "frames": 1195,
+        "correct": 429,
+        "other": 245,
+        "wrong": 521,
+        "classes": {
+          "other": {
+            "tp": 0,
+            "support": 0,
+            "predicted": 245,
+            "precision": 0.0,
+            "recall": null,
+            "f1": 0.0
+          },
+          "inside": {
+            "tp": 144,
+            "support": 148,
+            "predicted": 523,
+            "precision": 0.27533460803059273,
+            "recall": 0.972972972972973,
+            "f1": 0.42921013412816694
+          },
+          "outside": {
+            "tp": 26,
+            "support": 160,
+            "predicted": 45,
+            "precision": 0.5777777777777777,
+            "recall": 0.1625,
+            "f1": 0.25365853658536586
+          },
+          "interlace": {
+            "tp": 0,
+            "support": 129,
+            "predicted": 13,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "knuckles": {
+            "tp": 48,
+            "support": 205,
+            "predicted": 89,
+            "precision": 0.5393258426966292,
+            "recall": 0.23414634146341465,
+            "f1": 0.32653061224489793
+          },
+          "thumb": {
+            "tp": 42,
+            "support": 209,
+            "predicted": 42,
+            "precision": 1.0,
+            "recall": 0.20095693779904306,
+            "f1": 0.3346613545816733
+          },
+          "fingertips": {
+            "tp": 74,
+            "support": 175,
+            "predicted": 96,
+            "precision": 0.7708333333333334,
+            "recall": 0.4228571428571429,
+            "f1": 0.5461254612546126
+          },
+          "wrist": {
+            "tp": 95,
+            "support": 169,
+            "predicted": 142,
+            "precision": 0.6690140845070423,
+            "recall": 0.5621301775147929,
+            "f1": 0.6109324758842444
+          }
+        },
+        "confusion_matrix": {
+          "other": {
+            "other": 0,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "inside": {
+            "other": 4,
+            "inside": 144,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "outside": {
+            "other": 34,
+            "inside": 87,
+            "outside": 26,
+            "interlace": 13,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "interlace": {
+            "other": 39,
+            "inside": 90,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "knuckles": {
+            "other": 23,
+            "inside": 87,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 48,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 47
+          },
+          "thumb": {
+            "other": 48,
+            "inside": 56,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 41,
+            "thumb": 42,
+            "fingertips": 22,
+            "wrist": 0
+          },
+          "fingertips": {
+            "other": 94,
+            "inside": 0,
+            "outside": 7,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 74,
+            "wrist": 0
+          },
+          "wrist": {
+            "other": 3,
+            "inside": 59,
+            "outside": 12,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 95
+          }
+        }
+      },
+      "credit": {
+        "frames": 1195,
+        "correct": 69,
+        "other": 1074,
+        "wrong": 52,
+        "classes": {
+          "other": {
+            "tp": 0,
+            "support": 0,
+            "predicted": 1074,
+            "precision": 0.0,
+            "recall": null,
+            "f1": 0.0
+          },
+          "inside": {
+            "tp": 6,
+            "support": 148,
+            "predicted": 54,
+            "precision": 0.1111111111111111,
+            "recall": 0.04054054054054054,
+            "f1": 0.0594059405940594
+          },
+          "outside": {
+            "tp": 0,
+            "support": 160,
+            "predicted": 0,
+            "precision": null,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "interlace": {
+            "tp": 0,
+            "support": 129,
+            "predicted": 0,
+            "precision": null,
+            "recall": 0.0,
+            "f1": 0.0
+          },
+          "knuckles": {
+            "tp": 5,
+            "support": 205,
+            "predicted": 5,
+            "precision": 1.0,
+            "recall": 0.024390243902439025,
+            "f1": 0.047619047619047616
+          },
+          "thumb": {
+            "tp": 4,
+            "support": 209,
+            "predicted": 4,
+            "precision": 1.0,
+            "recall": 0.019138755980861243,
+            "f1": 0.03755868544600939
+          },
+          "fingertips": {
+            "tp": 20,
+            "support": 175,
+            "predicted": 20,
+            "precision": 1.0,
+            "recall": 0.11428571428571428,
+            "f1": 0.20512820512820512
+          },
+          "wrist": {
+            "tp": 34,
+            "support": 169,
+            "predicted": 38,
+            "precision": 0.8947368421052632,
+            "recall": 0.20118343195266272,
+            "f1": 0.3285024154589372
+          }
+        },
+        "confusion_matrix": {
+          "other": {
+            "other": 0,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "inside": {
+            "other": 142,
+            "inside": 6,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "outside": {
+            "other": 119,
+            "inside": 41,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "interlace": {
+            "other": 122,
+            "inside": 7,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "knuckles": {
+            "other": 196,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 5,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 4
+          },
+          "thumb": {
+            "other": 205,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 4,
+            "fingertips": 0,
+            "wrist": 0
+          },
+          "fingertips": {
+            "other": 155,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 20,
+            "wrist": 0
+          },
+          "wrist": {
+            "other": 135,
+            "inside": 0,
+            "outside": 0,
+            "interlace": 0,
+            "knuckles": 0,
+            "thumb": 0,
+            "fingertips": 0,
+            "wrist": 34
+          }
+        }
+      }
+    }
+  }
+}

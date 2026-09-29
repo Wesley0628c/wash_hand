@@ -1,0 +1,100 @@
+{
+  "model_file": "wash_hand_xgb.joblib",
+  "trained_at": "2026-09-28 13:22:19 UTC",
+  "total_samples": 6679,
+  "feature_dim": 960,
+  "classes": {
+    "0": "other",
+    "1": "inside",
+    "2": "outside",
+    "3": "interlace",
+    "4": "knuckles",
+    "5": "thumb",
+    "6": "fingertips",
+    "7": "wrist"
+  },
+  "sources": [
+    "sample_v2/內.mov",
+    "sample_v2/外.mov",
+    "sample_v2/大.mov",
+    "sample_v2/夾.mov",
+    "sample_v2/弓.mov",
+    "sample_v2/立.mov",
+    "sample_v2/腕.mov",
+    "sample_v1/內.mov",
+    "sample_v1/外.mov",
+    "sample_v1/大.mov",
+    "sample_v1/夾.mov",
+    "sample_v1/弓.mov",
+    "sample_v1/立.mov",
+    "sample_v1/腕.mov"
+  ],
+  "unique_groups": 18,
+  "hyperparameters": {
+    "n_estimators": 120,
+    "max_depth": 6,
+    "learning_rate": 0.08,
+    "subsample": 0.85,
+    "colsample_bytree": 0.85
+  },
+  "stratified_cv_metrics": {
+    "macro_f1": 0.9974703522808153,
+    "weighted_f1": 0.997604928853644,
+    "accuracy": 0.9976044318011679,
+    "per_class": {
+      "other": {
+        "precision": 0.9912790697674418,
+        "recall": 1.0,
+        "f1": 0.9956204379562044,
+        "support": 341
+      },
+      "inside": {
+        "precision": 0.9977452085682075,
+        "recall": 0.9988713318284425,
+        "f1": 0.9983079526226735,
+        "support": 886
+      },
+      "outside": {
+        "precision": 0.9965556831228473,
+        "recall": 0.9965556831228473,
+        "f1": 0.9965556831228473,
+        "support": 871
+      },
+      "interlace": {
+        "precision": 1.0,
+        "recall": 0.9951100244498777,
+        "f1": 0.9975490196078431,
+        "support": 818
+      },
+      "knuckles": {
+        "precision": 0.9980952380952381,
+        "recall": 0.9990467111534795,
+        "f1": 0.9985707479752263,
+        "support": 1049
+      },
+      "thumb": {
+        "precision": 0.995987963891675,
+        "recall": 0.9969879518072289,
+        "f1": 0.9964877069744105,
+        "support": 996
+      },
+      "fingertips": {
+        "precision": 0.9978425026968716,
+        "recall": 0.9967672413793104,
+        "f1": 0.9973045822102425,
+        "support": 928
+      },
+      "wrist": {
+        "precision": 1.0,
+        "recall": 0.9987341772151899,
+        "f1": 0.999366687777074,
+        "support": 790
+      }
+    }
+  },
+  "group_cv_metrics": {
+    "macro_f1": 0.27525721464768527,
+    "weighted_f1": 0.29168180924641895,
+    "accuracy": 0.29285821230723164
+  }
+}

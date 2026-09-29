@@ -1,0 +1,146 @@
+{
+  "before": {
+    "inside": {
+      "other": 84,
+      "inside": 69,
+      "outside": 13,
+      "interlace": 195,
+      "knuckles": 0,
+      "thumb": 16,
+      "fingertips": 0,
+      "wrist": 0
+    },
+    "outside": {
+      "other": 174,
+      "inside": 146,
+      "outside": 49,
+      "interlace": 2,
+      "knuckles": 0,
+      "thumb": 46,
+      "fingertips": 0,
+      "wrist": 0
+    },
+    "interlace": {
+      "other": 77,
+      "inside": 0,
+      "outside": 88,
+      "interlace": 135,
+      "knuckles": 0,
+      "thumb": 36,
+      "fingertips": 0,
+      "wrist": 0
+    },
+    "knuckles": {
+      "other": 154,
+      "inside": 74,
+      "outside": 5,
+      "interlace": 0,
+      "knuckles": 72,
+      "thumb": 119,
+      "fingertips": 0,
+      "wrist": 0
+    },
+    "thumb": {
+      "other": 96,
+      "inside": 129,
+      "outside": 0,
+      "interlace": 61,
+      "knuckles": 36,
+      "thumb": 56,
+      "fingertips": 0,
+      "wrist": 37
+    },
+    "fingertips": {
+      "other": 91,
+      "inside": 6,
+      "outside": 48,
+      "interlace": 70,
+      "knuckles": 0,
+      "thumb": 32,
+      "fingertips": 138,
+      "wrist": 0
+    },
+    "wrist": {
+      "other": 43,
+      "inside": 32,
+      "outside": 0,
+      "interlace": 50,
+      "knuckles": 0,
+      "thumb": 86,
+      "fingertips": 13,
+      "wrist": 111
+    }
+  },
+  "after": {
+    "inside": {
+      "other": 377,
+      "inside": 0,
+      "outside": 0,
+      "interlace": 0,
+      "knuckles": 0,
+      "thumb": 0,
+      "fingertips": 0,
+      "wrist": 0
+    },
+    "outside": {
+      "other": 359,
+      "inside": 0,
+      "outside": 58,
+      "interlace": 0,
+      "knuckles": 0,
+      "thumb": 0,
+      "fingertips": 0,
+      "wrist": 0
+    },
+    "interlace": {
+      "other": 336,
+      "inside": 0,
+      "outside": 0,
+      "interlace": 0,
+      "knuckles": 0,
+      "thumb": 0,
+      "fingertips": 0,
+      "wrist": 0
+    },
+    "knuckles": {
+      "other": 328,
+      "inside": 0,
+      "outside": 0,
+      "interlace": 0,
+      "knuckles": 96,
+      "thumb": 0,
+      "fingertips": 0,
+      "wrist": 0
+    },
+    "thumb": {
+      "other": 397,
+      "inside": 0,
+      "outside": 0,
+      "interlace": 0,
+      "knuckles": 0,
+      "thumb": 18,
+      "fingertips": 0,
+      "wrist": 0
+    },
+    "fingertips": {
+      "other": 268,
+      "inside": 0,
+      "outside": 0,
+      "interlace": 0,
+      "knuckles": 0,
+      "thumb": 0,
+      "fingertips": 117,
+      "wrist": 0
+    },
+    "wrist": {
+      "other": 242,
+      "inside": 0,
+      "outside": 0,
+      "interlace": 0,
+      "knuckles": 0,
+      "thumb": 4,
+      "fingertips": 0,
+      "wrist": 89
+    }
+  }
+}

@@ -1,0 +1,358 @@
+[
+  {
+    "clip": "data/sample_v1/內.mov",
+    "target": "inside",
+    "frames": 229,
+    "display_counts": {
+      "other": 59,
+      "inside": 170
+    },
+    "raw_counts": {
+      "inside": 180,
+      "knuckles": 6,
+      "outside": 10,
+      "thumb": 2,
+      "other": 30,
+      "fingertips": 1
+    },
+    "correct_fraction": 0.74235807860262,
+    "wrong_fraction": 0.0,
+    "credit_seconds": {
+      "other": 0.0,
+      "inside": 0.023405797101449275
+    },
+    "completed": []
+  },
+  {
+    "clip": "data/sample_v1/外.mov",
+    "target": "outside",
+    "frames": 257,
+    "display_counts": {
+      "other": 158,
+      "inside": 99
+    },
+    "raw_counts": {
+      "other": 114,
+      "inside": 114,
+      "outside": 21,
+      "fingertips": 6,
+      "knuckles": 2
+    },
+    "correct_fraction": 0.0,
+    "wrong_fraction": 0.3852140077821012,
+    "credit_seconds": {
+      "other": 0.0
+    },
+    "completed": []
+  },
+  {
+    "clip": "data/sample_v1/夾.mov",
+    "target": "interlace",
+    "frames": 207,
+    "display_counts": {
+      "other": 133,
+      "inside": 57,
+      "interlace": 17
+    },
+    "raw_counts": {
+      "inside": 91,
+      "other": 79,
+      "wrist": 6,
+      "outside": 11,
+      "fingertips": 2,
+      "knuckles": 2,
+      "thumb": 1,
+      "interlace": 15
+    },
+    "correct_fraction": 0.0821256038647343,
+    "wrong_fraction": 0.2753623188405797,
+    "credit_seconds": {
+      "other": 0.0,
+      "inside": 0.5081730769230771
+    },
+    "completed": []
+  },
+  {
+    "clip": "data/sample_v1/弓.mov",
+    "target": "knuckles",
+    "frames": 219,
+    "display_counts": {
+      "other": 170,
+      "inside": 14,
+      "thumb": 14,
+      "fingertips": 16,
+      "knuckles": 5
+    },
+    "raw_counts": {
+      "other": 81,
+      "fingertips": 28,
+      "inside": 36,
+      "outside": 8,
+      "thumb": 24,
+      "wrist": 7,
+      "knuckles": 29,
+      "interlace": 6
+    },
+    "correct_fraction": 0.0228310502283105,
+    "wrong_fraction": 0.2009132420091324,
+    "credit_seconds": {
+      "other": 0.0
+    },
+    "completed": []
+  },
+  {
+    "clip": "data/sample_v1/大.mov",
+    "target": "thumb",
+    "frames": 206,
+    "display_counts": {
+      "other": 78,
+      "inside": 73,
+      "fingertips": 8,
+      "knuckles": 47
+    },
+    "raw_counts": {
+      "inside": 86,
+      "fingertips": 12,
+      "other": 49,
+      "knuckles": 51,
+      "thumb": 4,
+      "wrist": 4
+    },
+    "correct_fraction": 0.0,
+    "wrong_fraction": 0.6213592233009708,
+    "credit_seconds": {
+      "other": 0.0,
+      "knuckles": 0.02411003236245955
+    },
+    "completed": []
+  },
+  {
+    "clip": "data/sample_v1/立.mov",
+    "target": "fingertips",
+    "frames": 210,
+    "display_counts": {
+      "other": 51,
+      "fingertips": 123,
+      "inside": 36
+    },
+    "raw_counts": {
+      "fingertips": 102,
+      "other": 52,
+      "inside": 48,
+      "outside": 8
+    },
+    "correct_fraction": 0.5857142857142857,
+    "wrong_fraction": 0.17142857142857143,
+    "credit_seconds": {
+      "other": 0.0,
+      "fingertips": 1.5499999999999987
+    },
+    "completed": [
+      "fingertips"
+    ]
+  },
+  {
+    "clip": "data/sample_v1/腕.mov",
+    "target": "wrist",
+    "frames": 166,
+    "display_counts": {
+      "other": 151,
+      "thumb": 15
+    },
+    "raw_counts": {
+      "fingertips": 13,
+      "other": 76,
+      "inside": 25,
+      "outside": 4,
+      "thumb": 28,
+      "knuckles": 9,
+      "wrist": 11
+    },
+    "correct_fraction": 0.0,
+    "wrong_fraction": 0.09036144578313253,
+    "credit_seconds": {
+      "other": 0.0
+    },
+    "completed": []
+  },
+  {
+    "clip": "data/sample_v2/內.mov",
+    "target": "inside",
+    "frames": 148,
+    "display_counts": {
+      "other": 4,
+      "inside": 144
+    },
+    "raw_counts": {
+      "inside": 132,
+      "outside": 5,
+      "fingertips": 7,
+      "interlace": 2,
+      "other": 2
+    },
+    "correct_fraction": 0.972972972972973,
+    "wrong_fraction": 0.0,
+    "credit_seconds": {
+      "other": 0.0,
+      "inside": 0.11208053691275169
+    },
+    "completed": []
+  },
+  {
+    "clip": "data/sample_v2/外.mov",
+    "target": "outside",
+    "frames": 160,
+    "display_counts": {
+      "other": 34,
+      "inside": 87,
+      "outside": 26,
+      "interlace": 13
+    },
+    "raw_counts": {
+      "inside": 86,
+      "outside": 22,
+      "interlace": 18,
+      "other": 32,
+      "fingertips": 2
+    },
+    "correct_fraction": 0.1625,
+    "wrong_fraction": 0.625,
+    "credit_seconds": {
+      "other": 0.0,
+      "inside": 1.1502070393374755
+    },
+    "completed": [
+      "inside"
+    ]
+  },
+  {
+    "clip": "data/sample_v2/夾.mov",
+    "target": "interlace",
+    "frames": 129,
+    "display_counts": {
+      "other": 39,
+      "inside": 90
+    },
+    "raw_counts": {
+      "inside": 94,
+      "outside": 8,
+      "other": 22,
+      "fingertips": 3,
+      "interlace": 2
+    },
+    "correct_fraction": 0.0,
+    "wrong_fraction": 0.6976744186046512,
+    "credit_seconds": {
+      "other": 0.0,
+      "inside": 0.1872093023255814
+    },
+    "completed": []
+  },
+  {
+    "clip": "data/sample_v2/弓.mov",
+    "target": "knuckles",
+    "frames": 205,
+    "display_counts": {
+      "other": 23,
+      "inside": 87,
+      "wrist": 47,
+      "knuckles": 48
+    },
+    "raw_counts": {
+      "inside": 79,
+      "other": 7,
+      "knuckles": 53,
+      "wrist": 35,
+      "fingertips": 6,
+      "thumb": 25
+    },
+    "correct_fraction": 0.23414634146341465,
+    "wrong_fraction": 0.6536585365853659,
+    "credit_seconds": {
+      "other": 0.0,
+      "wrist": 0.10699186991869918,
+      "knuckles": 0.13373983739837397
+    },
+    "completed": []
+  },
+  {
+    "clip": "data/sample_v2/大.mov",
+    "target": "thumb",
+    "frames": 209,
+    "display_counts": {
+      "other": 48,
+      "inside": 56,
+      "thumb": 42,
+      "knuckles": 41,
+      "fingertips": 22
+    },
+    "raw_counts": {
+      "inside": 51,
+      "interlace": 2,
+      "other": 24,
+      "knuckles": 56,
+      "thumb": 44,
+      "fingertips": 28,
+      "outside": 2,
+      "wrist": 2
+    },
+    "correct_fraction": 0.20095693779904306,
+    "wrong_fraction": 0.569377990430622,
+    "credit_seconds": {
+      "other": 0.0,
+      "thumb": 0.11333333333333333
+    },
+    "completed": []
+  },
+  {
+    "clip": "data/sample_v2/立.mov",
+    "target": "fingertips",
+    "frames": 175,
+    "display_counts": {
+      "other": 94,
+      "fingertips": 74,
+      "outside": 7
+    },
+    "raw_counts": {
+      "other": 77,
+      "inside": 41,
+      "fingertips": 49,
+      "outside": 7,
+      "thumb": 1
+    },
+    "correct_fraction": 0.4228571428571429,
+    "wrong_fraction": 0.04,
+    "credit_seconds": {
+      "other": 0.0,
+      "fingertips": 0.5142857142857141
+    },
+    "completed": []
+  },
+  {
+    "clip": "data/sample_v2/腕.mov",
+    "target": "wrist",
+    "frames": 169,
+    "display_counts": {
+      "other": 3,
+      "inside": 59,
+      "wrist": 95,
+      "outside": 12
+    },
+    "raw_counts": {
+      "inside": 66,
+      "thumb": 7,
+      "wrist": 68,
+      "outside": 11,
+      "fingertips": 6,
+      "other": 8,
+      "knuckles": 3
+    },
+    "correct_fraction": 0.5621301775147929,
+    "wrong_fraction": 0.42011834319526625,
+    "credit_seconds": {
+      "other": 0.0,
+      "wrist": 0.9120315581854039
+    },
+    "completed": []
+  }
+]

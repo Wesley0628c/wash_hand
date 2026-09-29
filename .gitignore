@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Testing & Cache
+.pytest_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Large / Generated data & models (keep folder structure)
+data/processed/*.npy
+data/processed/*.mp4
+data/processed/*.mov
+data/processed/*.avi
+!data/processed/.gitkeep
+data/raw/*
+!data/raw/.gitkeep
+data/sample_v1/*.mov
+data/sample_v2/*.mov
+models/*.task
+!models/.gitkeep
+
+# Generated output videos
+output*.mp4
+output*.mov
+*.mp4
+!data/clips/**/*.mp4
+
+# Scratch files
+scratch/
+

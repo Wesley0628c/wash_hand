@@ -1,0 +1,11 @@
+{
+  "src/accumulator.py": "915d655e7dc5c947abb5fdeb31a0089cb57ca485417be0295a87b7d757793bdf",
+  "src/features.py": "16afbdd3112d675451969d4a43fae64b0c07eebfd7c69e8b057953968d867df0",
+  "src/pipeline.py": "bcc1839323e52743f3dbac39d512c0381fb29a298a72dcbb5f590e076937469f",
+  "src/rule_classifier.py": "cc6fa9d843060175a7d91f618e2e3f3afd7fe05a215691224bc53ac83b99dae8",
+  "src/state_machine.py": "462f8141e3d429d9e440430dfce3805664457068d14a763d31e43d2ba46d1d57",
+  "src/evaluate_samples.py": "011064cd7c946e4721cf9aca5cb6fd23a44d036e3396c7fabccc9d5a86e7f376",
+  "src/test_video.py": "a185dabd9e9b0eca26b2857e88e740aafa0c3e30ede268a3f544b0d87933be2e",
+  "tests/test_evidence_gating.py": "5bc66bd87f93ba29fda7b4d09df01ef86cd6837f5acfff7153b0dcf732be4680",
+  "scratch/sample_detections.json": "d6ad1b2c8ba764ef578b935205a02bdcf1aaac774009b721c20e56a87f89729f"
+}

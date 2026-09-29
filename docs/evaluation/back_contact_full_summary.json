@@ -1,0 +1,108 @@
+{
+  "palm_video1": {
+    "frames": 1147,
+    "display": {
+      "other": 661,
+      "inside": 295,
+      "outside": 40,
+      "interlace": 5,
+      "fingertips": 95,
+      "thumb": 19,
+      "knuckles": 24,
+      "wrist": 8
+    },
+    "credit": {
+      "other": 1070,
+      "inside": 10,
+      "outside": 10,
+      "fingertips": 57
+    },
+    "completed": [
+      [
+        31.131100000000004,
+        "fingertips"
+      ]
+    ]
+  },
+  "palm_video2": {
+    "frames": 971,
+    "display": {
+      "other": 377,
+      "inside": 140,
+      "interlace": 8,
+      "outside": 114,
+      "knuckles": 76,
+      "wrist": 115,
+      "thumb": 61,
+      "fingertips": 80
+    },
+    "credit": {
+      "other": 838,
+      "inside": 30,
+      "outside": 14,
+      "wrist": 48,
+      "knuckles": 12,
+      "thumb": 7,
+      "fingertips": 22
+    },
+    "completed": [
+      [
+        13.680333333333333,
+        "inside"
+      ],
+      [
+        38.28825,
+        "wrist"
+      ]
+    ]
+  },
+  "back_contact_video1": {
+    "frames": 1147,
+    "display": {
+      "other": 799,
+      "inside": 164,
+      "outside": 27,
+      "interlace": 5,
+      "fingertips": 98,
+      "thumb": 22,
+      "knuckles": 24,
+      "wrist": 8
+    },
+    "credit": {
+      "other": 1089,
+      "fingertips": 58
+    },
+    "completed": [
+      [
+        31.097733333333338,
+        "fingertips"
+      ]
+    ]
+  },
+  "back_contact_video2": {
+    "frames": 971,
+    "display": {
+      "other": 487,
+      "inside": 78,
+      "fingertips": 89,
+      "interlace": 9,
+      "outside": 50,
+      "knuckles": 76,
+      "wrist": 121,
+      "thumb": 61
+    },
+    "credit": {
+      "other": 881,
+      "wrist": 49,
+      "knuckles": 12,
+      "thumb": 7,
+      "fingertips": 22
+    },
+    "completed": [
+      [
+        38.20483333333333,
+        "wrist"
+      ]
+    ]
+  }
+}
