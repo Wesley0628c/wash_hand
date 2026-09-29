@@ -201,15 +201,15 @@ class WashHandRuleClassifier:
                 score_da = max(0.0, score_da - 1.5)
 
             # ─── (B) 計算「弓 (Knuckles)」證據分數 ───
-            # 1. 指節貼掌分：指節 PIP 緊貼對側平掌掌心中央
+            # 1. 指節貼掌分：指節 PIP 緊貼對側平掌掌心中央，且指節深於指尖
             knuckle_to_palm_score = 0.0
             eff_kn_dist = min(curled_kn_to_palm, min_kn_to_p)
-            if eff_kn_dist < 0.85:
+            if eff_kn_dist < 0.85 and eff_kn_dist < min_t_to_p + 0.08:
                 knuckle_to_palm_score = 1.8
                 if eff_kn_dist < 0.75:
                     knuckle_to_palm_score = 2.2
-                if eff_kn_dist < 0.65:
-                    knuckle_to_palm_score += 0.3
+                if eff_kn_dist < min_t_to_p - 0.05:
+                    knuckle_to_palm_score += 0.4
 
             # 2. 弓手與承接手形態分：彎曲手呈弓形、承接手平掌
             gong_finger_score = 0.0
@@ -228,28 +228,47 @@ class WashHandRuleClassifier:
             if (open_thumb_to_fist < 0.65 or min_web_th < 0.65) and eff_kn_dist > open_thumb_to_fist + 0.08:
                 score_gong = max(0.0, score_gong - 1.5)
 
-            # ─── (C) 綜合競爭裁決 ───
+            # ─── (C) 計算「立 (Fingertips)」證據分數 ───
+            # 1. 指尖聚攏分：四指指尖聚集成束 (放寬視角門檻至 0.38)
+            li_cluster_score = 0.0
+            if fing_spread < 0.38:
+                li_cluster_score = 1.8
+                if fing_spread < 0.28:
+                    li_cluster_score = 2.3
+
+            # 2. 指尖深於指節 (Tips on Palm Depth) —— 關鍵鑑別點！
+            li_depth_score = 0.0
+            if min_t_to_p < 0.95 and min_t_to_p <= eff_kn_dist + 0.12:
+                li_depth_score = 1.0
+                if min_t_to_p < eff_kn_dist - 0.05:
+                    li_depth_score = 1.5
+                if min_t_to_p < 0.70:
+                    li_depth_score += 0.3
+
+            # 3. 連續搓動/旋轉分
+            li_motion_score = 0.3 if velocity > 0.010 else 0.0
+
+            score_li = li_cluster_score + li_depth_score + li_motion_score
+            if palm_dist >= 1.60 or open_thumb_to_fist < 0.60:
+                score_li = max(0.0, score_li - 1.5)
+
+            # 相互抑制：若指尖明顯聚攏且比指節更靠近掌心，扣減弓分數
+            if fing_spread < 0.35 and min_t_to_p < eff_kn_dist:
+                score_gong = max(0.0, score_gong - 1.8)
+
+            # ─── (D) 綜合三者競爭裁決 (Thumb vs Knuckles vs Fingertips) ───
             is_thumb_wrapped = False
             is_knuckle_on_palm = False
 
-            if scores["wrist"] <= 0.0 and max(score_da, score_gong) >= 3.0:
-                if score_da > score_gong:
+            if scores["wrist"] <= 0.0 and max(score_da, score_gong, score_li) >= 2.8:
+                if score_li >= score_da and score_li >= score_gong:
+                    scores["fingertips"] = min(3.8, score_li)
+                elif score_da > score_gong:
                     scores["thumb"] = min(3.8, score_da)
                     is_thumb_wrapped = True
                 else:
                     scores["knuckles"] = min(3.8, score_gong)
                     is_knuckle_on_palm = True
-
-            # ── 3. [立 Fingertips] ────────────────────────────────────────
-            # 指尖搓掌心：四指指尖聚攏，垂直在對側掌心中心旋轉
-            fingers_clustered = (fing_spread < 0.30)
-            tips_at_palm = (min_t_to_p < 0.90 and min_t_to_p <= min_kn_to_p + 0.15)
-
-            if fingers_clustered and tips_at_palm and palm_dist < 1.40 and not is_thumb_wrapped:
-                tip_score = 3.5
-                if scores["knuckles"] > 0.0 and min_t_to_p < min_kn_to_p:
-                    tip_score += 0.2
-                scores["fingertips"] = tip_score
 
             # ── 5. [夾 Interlace] vs [內 Inside] vs [外 Outside] ───────────
             # 雙手平掌伸展 (四指皆伸直平展 min_curl >= 142.0, max_curl > 150.0, palm_dist < 1.60)
@@ -303,12 +322,15 @@ class WashHandRuleClassifier:
                 tip_contact = any(c["curl"] >= 80.0 and c["tips_to_palm"] < 1.0
                                   and c["spread"] < 0.32
                                   and c["tips_to_palm"] < c["knuckles_to_palm"] - 0.05 for c in contacts)
-                if knuckle_contact and palm_dist < 1.6 and not is_thumb_wrapped:
+                if knuckle_contact and palm_dist < 1.6 and not is_thumb_wrapped and not tip_contact and scores["fingertips"] <= 0.0:
                     scores["knuckles"] = max(scores["knuckles"], 3.5)
                     # 握住手腕必要條件不滿足：指節貼在掌心，強烈抑制手腕
                     scores["wrist"] = max(0.0, scores["wrist"] - 2.0)
                 if tip_contact and palm_dist < 2.0 and not is_thumb_wrapped:
-                    scores["fingertips"] = max(scores["fingertips"], 3.5)
+                    scores["fingertips"] = max(scores["fingertips"], 3.6)
+                    # 指尖貼在掌心，強烈抑制弓與手腕
+                    scores["knuckles"] = max(0.0, scores["knuckles"] - 1.5)
+                    scores["wrist"] = max(0.0, scores["wrist"] - 2.0)
                 if knuckle_contact and not tip_contact and not is_thumb_wrapped:
                     scores["thumb"] = max(0.0, scores["thumb"] - 1.0)
                 if tip_contact and not knuckle_contact:
