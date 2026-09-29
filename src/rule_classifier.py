@@ -108,6 +108,12 @@ class WashHandRuleClassifier:
             max_curl  = max(left_curl, right_curl)
             curl_diff = abs(left_curl - right_curl)
 
+            l_s = float(inter.get("left_four_finger_spread", 0.0))
+            r_s = float(inter.get("right_four_finger_spread", 0.0))
+            max_spread = max(l_s, r_s)
+            mean_4_spread = (l_s + r_s) / 2.0 if l_s < 90 and r_s < 90 else min_4_spread
+            thumb_dist = float(inter.get("thumb_to_thumb_dist", 99.0))
+
             # Hand axis alignment angle (Wrist → Middle MCP)
             left_norm_lm  = features.get("left_norm")
             right_norm_lm = features.get("right_norm")
@@ -119,6 +125,11 @@ class WashHandRuleClassifier:
                 if norm_prod > 1e-6:
                     cos_a = np.dot(v_l, v_r) / norm_prod
                     axis_angle = float(np.degrees(np.arccos(np.clip(cos_a, -1.0, 1.0))))
+
+            # ─────────────────────────────────────────────────────────────
+            # 平行特徵收集機制 (Parallel Feature Gathering)
+            # 各動作獨立依據幾何證據給予分數，以最大機率 (Softmax) 決策，杜絕優先級攔截
+            # ─────────────────────────────────────────────────────────────
 
             # ── 1. [腕 Wrist] ─────────────────────────────────────────────
             # 必要條件 (Essential Prerequisite)：
@@ -141,48 +152,51 @@ class WashHandRuleClassifier:
                     grip_strength += 0.2
                 scores["wrist"] = grip_strength
 
-            # ── 2. [大 Thumb] ─────────────────────────────────────────────
-            # 旋轉搓洗拇指：一手拇指深入對側掌心/虎口，被對側手包覆
-            # 關鍵特徵：被洗手四指大張開伸展 (max_curl > 145.0 且 max_spread > 0.24)
-            l_s = float(inter.get("left_four_finger_spread", 0.0))
-            r_s = float(inter.get("right_four_finger_spread", 0.0))
-            max_spread = max(l_s, r_s)
-            is_thumb_in_web = (min_p_to_th < 0.85 or min_web_th < 0.85)
-            thumb_closer_than_knuckles = (min_p_to_th <= min_kn_to_p + 0.15 or min_web_th <= min_kn_to_p + 0.15)
+            # ── 2. [大 Thumb] vs [弓 Knuckles] ────────────────────────────
+            # 【弓】(指背搓掌心): 
+            # 核心特徵：彎曲手的 4 指指節 (PIP) 緊貼平掌掌心 (min_kn_to_p < 0.85)，承托手大拇指外露在空氣中
+            is_knuckle_on_palm = (
+                min_curl < 142.0
+                and (min_kn_to_p < 0.85 or min_kn_to_p <= min_p_to_th + 0.10)
+                and palm_dist < 2.0
+            )
+
+            # 【大】(旋轉搓洗拇指): 
+            # 核心特徵：大拇指被握在拳心內部 (min_p_to_th < 0.65 或 min_web_th < 0.65)
+            # 且拇指明顯比指節更靠近拳心 (min_p_to_th < min_kn_to_p - 0.10)，掌心無指節壓迫 (min_kn_to_p > 0.80)
+            is_thumb_wrapped = (
+                (min_p_to_th < 0.65 or min_web_th < 0.65)
+                and (min_p_to_th < min_kn_to_p - 0.10 or min_web_th < min_kn_to_p - 0.10)
+                and min_kn_to_p > 0.78
+            )
             has_thumb_curl = (min_curl < 135.0 or min(left_angles[0], right_angles[0]) < 120.0)
             has_spread_open_hand = (max_curl > 145.0 and max_spread > 0.24)
 
-            if is_thumb_in_web and has_thumb_curl and palm_dist < 1.60 and scores["wrist"] <= 0.0:
-                thumb_score = 3.4
-                if has_spread_open_hand:
-                    # 被握手四指大張開伸展，極為明確的洗大拇指姿態
-                    thumb_score = 3.8
-                elif thumb_closer_than_knuckles:
-                    thumb_score = 3.5
-                scores["thumb"] = thumb_score
-
-            # ── 3. [弓 Knuckles] ───────────────────────────────────────────
-            # 指背搓掌心：一手手指彎曲呈弓形 (min_curl < 142.0 即可)
-            # 關鍵區別：若為洗大拇指 (大拇指深入虎口且被握手張開)，則不應視為弓
-            not_thumb_grasp = not (is_thumb_in_web and has_spread_open_hand)
-            if min_curl < 142.0 and scores["wrist"] <= 0.0 and not_thumb_grasp and palm_dist < 2.0:
-                # 幾何證據打分：指節越靠近掌心越明確為弓
-                knuckle_score = 3.3
-                if min_kn_to_p < 0.90:
-                    knuckle_score = 3.5
-                if curl_diff > 20.0 or min_kn_to_p < 0.75:
+            # 弓評分：指節壓在掌心即給予高分，不受外露拇指干擾
+            if is_knuckle_on_palm and scores["wrist"] <= 0.0:
+                knuckle_score = 3.5
+                if min_kn_to_p < 0.75:
+                    knuckle_score = 3.8
+                if curl_diff > 20.0 or min_kn_to_p < 0.65:
                     knuckle_score += 0.2
-                # 若拇指深陷虎口且無明確指節接觸掌心，抑制弓的分數
-                if is_thumb_in_web and thumb_closer_than_knuckles:
+                # 只有在大拇指真正深陷拳心且無指節壓掌時才抑制弓
+                if is_thumb_wrapped:
                     knuckle_score = max(0.0, knuckle_score - 1.5)
                 scores["knuckles"] = knuckle_score
 
-            # ── 4. [立 Fingertips] ────────────────────────────────────────
+            # 大評分：大拇指必須真正深入拳心且掌心無指節壓迫
+            if is_thumb_wrapped and has_thumb_curl and palm_dist < 1.60 and scores["wrist"] <= 0.0:
+                thumb_score = 3.5
+                if has_spread_open_hand:
+                    thumb_score = 3.8
+                scores["thumb"] = thumb_score
+
+            # ── 3. [立 Fingertips] ────────────────────────────────────────
             # 指尖搓掌心：四指指尖聚攏，垂直在對側掌心中心旋轉
             fingers_clustered = (fing_spread < 0.30)
             tips_at_palm = (min_t_to_p < 0.90 and min_t_to_p <= min_kn_to_p + 0.15)
 
-            if fingers_clustered and tips_at_palm and palm_dist < 1.40 and not (is_thumb_in_web and has_spread_open_hand):
+            if fingers_clustered and tips_at_palm and palm_dist < 1.40 and not is_thumb_wrapped:
                 tip_score = 3.5
                 if scores["knuckles"] > 0.0 and min_t_to_p < min_kn_to_p:
                     tip_score += 0.2
@@ -196,48 +210,34 @@ class WashHandRuleClassifier:
                 mean_4_spread = (l_s_val + r_s_val) / 2.0 if l_s_val < 90 and r_s_val < 90 else min_4_spread
                 wrist_palm_diff = abs(wrist_dist - palm_dist)
                 thumb_dist = float(inter.get("thumb_to_thumb_dist", 99.0))
+                thumb_dot  = float(inter.get("thumb_dir_dot", 0.0))
 
-                # 【夾】(十指交錯):
-                # (1) 手指交錯交替 (interlace_alts >= 3 且 x_overlap >= 0.20 且 mean_4_spread >= 0.25 且 interlace_d < 1.15)
-                # (2) 雙手呈 X 形交叉且指縫交疊 (axis_angle >= 28.0 且 palm_dot < 0.10 且 x_overlap >= 0.20 且 interlace_alts >= 2 且 interlace_d < 1.25)
-                # 排除雙手大拇指同向貼齊的掌心對搓 (thumb_dist < 0.50 且 palm_dot < -0.40 且 interlace_alts <= 1)
-                is_interlace = (
-                    (
-                        (interlace_alts >= 3 and x_overlap >= 0.20 and mean_4_spread >= 0.25 and interlace_d < 1.15)
-                        or (axis_angle >= 28.0 and palm_dot < 0.10 and x_overlap >= 0.20 and interlace_alts >= 2 and interlace_d < 1.25)
-                    )
-                    and not (thumb_dist < 0.50 and palm_dot < -0.40 and interlace_alts <= 1)
-                )
+                is_interlace = (interlace_alts >= 4 and x_overlap >= 0.25
+                                and mean_4_spread >= 0.30
+                                and axis_angle > 28.0 and interlace_d < 1.15)
 
-                # 【內】(掌心對掌心):
-                # 必須綁定「掌心面對面 (palm_dot < -0.40)」且雙手大拇指 3D 距離近 (thumb_dist < 0.55 或未指定)
-                thumbs_aligned = (thumb_dist < 0.55 or thumb_dist > 90.0)
-                is_inside = (
-                    not is_interlace
-                    and (
-                        (palm_dot < -0.40 and thumbs_aligned)
-                        or (palm_dot < -0.60)
-                    )
-                    and palm_dist < 1.35
-                )
+                # 大拇指同邊 vs 不同邊判定準則:
+                # 內 (掌心相對): 兩手鏡像對稱 -> 大拇指對大拇指 (同邊: thumb_dot > 0.0 或 thumb_dist < 0.65)
+                # 外 (掌心覆蓋手背): 兩手同向疊合 -> 大拇指不同邊 (異邊: thumb_dot < -0.10 且 thumb_dist > 0.70)
+                thumbs_same_side = (thumb_dot > 0.0 or thumb_dist < 0.65)
+                thumbs_opposite_side = (thumb_dot < -0.10 and thumb_dist > 0.70)
 
-                # 【外】(掌心搓手背):
-                # 依據「掌背重疊」或「法向量同向 (palm_dot > -0.20)」獨立打分
-                is_outside = (
-                    not is_interlace
-                    and not is_inside
-                    and (
-                        palm_dot > -0.20
-                        or (wrist_palm_diff >= 0.20 and palm_dot > -0.30 and axis_angle < 60.0)
-                        or (thumb_dist > 0.70 and thumb_dist < 90.0 and palm_dot > -0.35 and axis_angle < 60.0)
-                    )
-                    and palm_dist < 1.50
-                )
+                is_inside = (not is_interlace and (
+                    thumbs_same_side or (palm_dot < -0.30 and not thumbs_opposite_side)
+                ) and palm_dist < 1.35)
+
+                is_outside = (not is_interlace and not is_inside and (
+                    thumbs_opposite_side
+                    or ((palm_dot > -0.20 or wrist_palm_diff >= 0.20 or axis_angle >= 28.0) and axis_angle < 75.0)
+                ) and palm_dist < 1.50)
 
                 if is_interlace:
-                    scores["interlace"] = 3.6
+                    scores["interlace"] = 3.5
+                elif thumbs_opposite_side and not is_interlace:
+                    # 明確大拇指異邊：掌心覆蓋手背 (外)
+                    scores["outside"] = 3.4
                 elif is_inside:
-                    # 明確掌心相對且拇指對齊：掌心對搓 (內)
+                    # 明確大拇指同邊或掌心相對：掌心對搓 (內)
                     scores["inside"] = 3.4
                 elif is_outside:
                     scores["outside"] = 1.8
@@ -281,7 +281,6 @@ class WashHandRuleClassifier:
             mean_4_angle  = float(np.mean(active_angles[1:])) if len(active_angles) >= 5 else 180.0
             thumb_angle   = float(active_angles[0])           if len(active_angles) >= 1 else 180.0
             thumb_tip_w   = float(features.get("active_thumb_tip_to_wrist", 2.0))
-            has_valid_active_hand = (len(active_angles) >= 5 and any(a > 30.0 for a in active_angles))
 
             # [腕 Wrist — single hand]: 握持手腕必要條件：深環握且拇指尖貼近手腕
             if (
@@ -291,34 +290,34 @@ class WashHandRuleClassifier:
                 scores["wrist"] = 2.5
 
             # [大 Thumb — single hand]: 
-            # 形態 A: 被握手四指在空中大張開伸展 (spread_4 > 0.28 且四指伸展 mean_4_angle > 145.0)，大拇指被包住/內收 (thumb_angle < 130.0 或 thumb_tip_w < 0.88)
+            # 形態 A: 被握手四指在空中張開 (spread_4 > 0.30 且食/中指伸展)，但排除全手指均勻平展的掌心對搓候選
             # 形態 B: 握持手四指緊握 (mean_4_angle < 125.0)，拇指閉合 (thumb_angle < 120.0)，旋轉運動中 (velocity > 0.015)
-            is_all_flat = (min(active_angles) > 140.0 and thumb_angle > 135.0)
+            is_all_flat = (min(active_angles) > 145.0)
             is_single_thumb_open = (
                 not is_all_flat and (
-                    (spread_4 > 0.28 and max(active_angles[1], active_angles[2]) > 150.0 and (thumb_angle < 130.0 or thumb_tip_w < 0.88))
-                    or (mean_4_angle > 145.0 and spread_4 > 0.24 and (thumb_angle < 125.0 or thumb_tip_w < 0.85))
+                    (spread_4 > 0.30 and max(active_angles[1], active_angles[2]) > 155.0 and min(active_angles[1:]) < 130.0)
+                    or (mean_4_angle > 145.0 and spread_4 > 0.24 and (thumb_angle < 130.0 or thumb_tip_w < 0.88))
                 )
             )
             is_single_thumb_grip = (mean_4_angle < 125.0 and thumb_angle < 120.0 and velocity > 0.015 and thumb_tip_w >= 0.65)
             if (is_single_thumb_open or is_single_thumb_grip) and scores["wrist"] <= 0.0:
                 scores["thumb"] = 2.5
 
-            # [弓 Knuckles — single hand]: 當四指彎曲呈弓形 (45.0 <= mean_4_angle < 142.0)
-            if has_valid_active_hand and 45.0 <= mean_4_angle < 142.0 and scores["wrist"] <= 0.0:
-                if not is_single_thumb_open:
-                    scores["knuckles"] = 2.4
+            # [弓 Knuckles — single hand]: 當四指彎曲呈弓形 (45.0 <= mean_4_angle < 142.0) 即可判定為弓
+            has_valid_active_hand = (len(active_angles) >= 5 and any(a > 30.0 for a in active_angles))
+            if has_valid_active_hand and 45.0 <= mean_4_angle < 142.0 and scores["wrist"] <= 0.0 and scores["thumb"] <= 0.0:
+                scores["knuckles"] = 2.4
 
             # [立 Fingertips — single hand]: 指尖聚攏 (四指指尖聚攏 pointing down/inward，且非弓形指背)
-            if has_valid_active_hand and 130.0 <= mean_4_angle < 155.0 and spread_4 <= 0.22 and not is_single_thumb_open:
+            if has_valid_active_hand and 130.0 <= mean_4_angle < 155.0 and spread_4 <= 0.22 and scores["knuckles"] <= 0.0 and scores["thumb"] <= 0.0:
                 scores["fingertips"] = 2.3
 
             # [外 Outside — single hand]: 平掌拇指內收姿態
-            if has_valid_active_hand and thumb_angle < 135.0 and mean_4_angle > 140.0 and spread_4 < 0.28 and not is_single_thumb_open:
+            if has_valid_active_hand and thumb_angle < 135.0 and mean_4_angle > 140.0 and spread_4 < 0.28 and scores["thumb"] <= 0.0:
                 scores["outside"] = 2.1
 
             # [內 Inside — single hand]: 單手平掌 (中性候選，機率約 0.32)
-            if has_valid_active_hand and mean_4_angle >= 140.0 and not is_single_thumb_open and scores["outside"] <= 0.0:
+            if has_valid_active_hand and mean_4_angle >= 140.0 and scores["outside"] <= 0.0 and scores["thumb"] <= 0.0:
                 scores["inside"] = 1.2
 
             if max(scores.values()) <= 0.0:

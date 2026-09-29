@@ -33,12 +33,6 @@ data/sample_v2/*.mov
 models/*.task
 !models/.gitkeep
 
-# Generated output videos
-output*.mp4
-output*.mov
-*.mp4
-!data/clips/**/*.mp4
-
 # Scratch files
 scratch/
 
