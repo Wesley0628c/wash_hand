@@ -287,9 +287,14 @@ class WashHandRuleClassifier:
                 thumb_dist = float(inter.get("thumb_to_thumb_dist", 99.0))
                 thumb_dot  = float(inter.get("thumb_dir_dot", 0.0))
 
-                is_interlace = (interlace_alts >= 4 and x_overlap >= 0.25
-                                and mean_4_spread >= 0.30
-                                and axis_angle > 28.0 and interlace_d < 1.15)
+                # 【夾】(十指交錯): 支援雙手 X 形交叉與 2~4 次手指穿插
+                is_interlace = (
+                    (
+                        (interlace_alts >= 3 and x_overlap >= 0.20 and mean_4_spread >= 0.24 and interlace_d < 1.25)
+                        or (interlace_alts >= 2 and axis_angle > 24.0 and x_overlap >= 0.20 and mean_4_spread >= 0.24 and interlace_d < 1.25)
+                    )
+                    and not (thumb_dist < 0.45 and palm_dot < -0.45 and interlace_alts <= 1)
+                )
 
                 # 大拇指同邊 vs 不同邊判定準則:
                 # 內 (掌心相對): 兩手鏡像對稱 -> 大拇指對大拇指 (同邊: thumb_dot > 0.0 或 thumb_dist < 0.65)
@@ -369,36 +374,24 @@ class WashHandRuleClassifier:
             ):
                 scores["wrist"] = 2.5
 
-            # [大 Thumb — single hand]: 
-            # 形態 A: 被握手四指在空中張開 (spread_4 > 0.30 且食/中指伸展)，但排除全手指均勻平展的掌心對搓候選
-            # 形態 B: 握持手四指緊握 (mean_4_angle < 125.0)，拇指閉合 (thumb_angle < 120.0)，旋轉運動中 (velocity > 0.015)
-            is_all_flat = (min(active_angles) > 145.0)
-            is_single_thumb_open = (
-                not is_all_flat and (
-                    (spread_4 > 0.30 and max(active_angles[1], active_angles[2]) > 155.0 and min(active_angles[1:]) < 130.0)
-                    or (mean_4_angle > 145.0 and spread_4 > 0.24 and (thumb_angle < 130.0 or thumb_tip_w < 0.88))
-                )
-            )
-            is_single_thumb_grip = (mean_4_angle < 125.0 and thumb_angle < 120.0 and velocity > 0.015 and thumb_tip_w >= 0.65)
-            if (is_single_thumb_open or is_single_thumb_grip) and scores["wrist"] <= 0.0:
+            # [大 Thumb — single hand]: 嚴格要求單手握拳握持姿態，嚴禁平掌誤判
+            is_single_thumb_grip = (mean_4_angle < 120.0 and thumb_angle < 115.0 and velocity > 0.015 and thumb_tip_w >= 0.60)
+            if is_single_thumb_grip and scores["wrist"] <= 0.0:
                 scores["thumb"] = 2.5
 
-            # [弓 Knuckles — single hand]: 當四指彎曲呈弓形 (45.0 <= mean_4_angle < 142.0) 即可判定為弓
+            # [弓 Knuckles — single hand]: 當四指彎曲呈弓形 (45.0 <= mean_4_angle < 135.0) 且非握持大拇指
             has_valid_active_hand = (len(active_angles) >= 5 and any(a > 30.0 for a in active_angles))
-            if has_valid_active_hand and 45.0 <= mean_4_angle < 142.0 and scores["wrist"] <= 0.0 and scores["thumb"] <= 0.0:
+            if has_valid_active_hand and 45.0 <= mean_4_angle < 135.0 and scores["wrist"] <= 0.0 and scores["thumb"] <= 0.0:
                 scores["knuckles"] = 2.4
 
             # [立 Fingertips — single hand]: 指尖聚攏 (四指指尖聚攏 pointing down/inward，且非弓形指背)
             if has_valid_active_hand and 130.0 <= mean_4_angle < 155.0 and spread_4 <= 0.22 and scores["knuckles"] <= 0.0 and scores["thumb"] <= 0.0:
                 scores["fingertips"] = 2.3
 
-            # [外 Outside — single hand]: 平掌拇指內收姿態
-            if has_valid_active_hand and thumb_angle < 135.0 and mean_4_angle > 140.0 and spread_4 < 0.28 and scores["thumb"] <= 0.0:
-                scores["outside"] = 2.1
-
-            # [內 Inside — single hand]: 單手平掌 (中性候選，機率約 0.32)
-            if has_valid_active_hand and mean_4_angle >= 140.0 and scores["outside"] <= 0.0 and scores["thumb"] <= 0.0:
-                scores["inside"] = 1.2
+            # [外 Outside / 內 Inside — single hand]: 單手平掌 (中性候選，交由時序追蹤器與手背特徵裁決)
+            if has_valid_active_hand and mean_4_angle >= 135.0 and scores["wrist"] <= 0.0 and scores["thumb"] <= 0.0:
+                scores["outside"] = 1.6
+                scores["inside"] = 1.6
 
             if max(scores.values()) <= 0.0:
                 scores["other"] = 2.0
