@@ -153,21 +153,38 @@ class WashHandRuleClassifier:
                 scores["wrist"] = grip_strength
 
             # ── 2. [大 Thumb] vs [弓 Knuckles] ────────────────────────────
+            # 定義平掌/伸展手 (Open Hand) 與 彎曲手 (Curled Hand) 的指向性特徵：
+            l_4_curl = float(np.mean(left_angles[1:])) if len(left_angles) >= 5 else 180.0
+            r_4_curl = float(np.mean(right_angles[1:])) if len(right_angles) >= 5 else 180.0
+            l_p_to_r_th = float(inter.get("left_palm_to_right_thumb", 99.0))
+            r_p_to_l_th = float(inter.get("right_palm_to_left_thumb", 99.0))
+            l_kn_to_r_p = float(inter.get("left_knuckles_to_right_palm", 99.0))
+            r_kn_to_l_p = float(inter.get("right_knuckles_to_left_palm", 99.0))
+
+            if l_4_curl >= r_4_curl:
+                # 左手為伸展手，右手為彎曲/握拳手
+                open_thumb_to_fist = r_p_to_l_th       # 右拳到左拇指
+                curled_kn_to_palm  = r_kn_to_l_p       # 右手指節到左掌心
+            else:
+                # 右手為伸展手，左手為彎曲/握拳手
+                open_thumb_to_fist = l_p_to_r_th       # 左拳到右拇指
+                curled_kn_to_palm  = l_kn_to_r_p       # 左手指節到右掌心
+
             # 【大】(旋轉搓洗拇指): 
-            # 核心特徵：大拇指尖被緊包在對側拳心/虎口內 (min_p_to_th < 0.65 或 min_web_th < 0.65)，
-            # 且指節未壓在對側掌心上 (min_kn_to_p > min_p_to_th + 0.08)，被握手四指展開 (max_curl > 140.0)
+            # 核心特徵：伸展手的大拇指深入握拳手掌心/虎口 (open_thumb_to_fist < 0.70)，且握拳手指節未壓在伸展手掌心
             is_thumb_wrapped = (
-                (min_p_to_th < 0.65 or min_web_th < 0.65)
-                and (min_kn_to_p > min_p_to_th + 0.08 or min_kn_to_p > 0.78)
+                open_thumb_to_fist < 0.70
+                and (curled_kn_to_palm > open_thumb_to_fist + 0.08 or curled_kn_to_palm > 0.78)
                 and max_curl > 140.0
                 and min_curl < 135.0
             )
 
             # 【弓】(指背搓掌心): 
-            # 核心特徵：彎曲手的 4 指指節 (PIP) 緊貼平掌掌心 (min_kn_to_p < 0.82)，且非大拇指被深握
+            # 核心特徵：彎曲手指節緊貼伸展手掌心 (curled_kn_to_palm < 0.82 或 min_kn_to_p < 0.82)
+            # 且伸展手大拇指在空氣中懸空外露 (open_thumb_to_fist > 0.70)
             is_knuckle_on_palm = (
                 min_curl < 142.0
-                and min_kn_to_p < 0.82
+                and (curled_kn_to_palm < 0.82 or min_kn_to_p < 0.82)
                 and not is_thumb_wrapped
                 and palm_dist < 2.0
             )
@@ -177,14 +194,14 @@ class WashHandRuleClassifier:
                 thumb_score = 3.6
                 if max_curl > 150.0 and min_curl < 120.0:
                     thumb_score = 3.8
-                elif min_p_to_th < 0.55 or min_web_th < 0.55:
+                elif open_thumb_to_fist < 0.55:
                     thumb_score = 3.7
                 scores["thumb"] = thumb_score
 
             # 弓評分：指節壓在掌心
             if is_knuckle_on_palm and scores["wrist"] <= 0.0 and scores["thumb"] <= 0.0:
                 knuckle_score = 3.5
-                if min_kn_to_p < 0.75:
+                if curled_kn_to_palm < 0.75 or min_kn_to_p < 0.75:
                     knuckle_score = 3.8
                 if curl_diff > 20.0 or min_kn_to_p < 0.65:
                     knuckle_score += 0.2
