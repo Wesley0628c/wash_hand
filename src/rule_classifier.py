@@ -196,34 +196,48 @@ class WashHandRuleClassifier:
                 mean_4_spread = (l_s_val + r_s_val) / 2.0 if l_s_val < 90 and r_s_val < 90 else min_4_spread
                 wrist_palm_diff = abs(wrist_dist - palm_dist)
                 thumb_dist = float(inter.get("thumb_to_thumb_dist", 99.0))
-                thumb_dot  = float(inter.get("thumb_dir_dot", 0.0))
 
-                is_interlace = (interlace_alts >= 4 and x_overlap >= 0.25
-                                and mean_4_spread >= 0.30
-                                and axis_angle > 28.0 and interlace_d < 1.15)
+                # 【夾】(十指交錯):
+                # (1) 手指交錯交替 (interlace_alts >= 3 且 x_overlap >= 0.20 且 mean_4_spread >= 0.25 且 interlace_d < 1.15)
+                # (2) 雙手呈 X 形交叉且指縫交疊 (axis_angle >= 28.0 且 palm_dot < 0.10 且 x_overlap >= 0.20 且 interlace_alts >= 2 且 interlace_d < 1.25)
+                # 排除雙手大拇指同向貼齊的掌心對搓 (thumb_dist < 0.50 且 palm_dot < -0.40 且 interlace_alts <= 1)
+                is_interlace = (
+                    (
+                        (interlace_alts >= 3 and x_overlap >= 0.20 and mean_4_spread >= 0.25 and interlace_d < 1.15)
+                        or (axis_angle >= 28.0 and palm_dot < 0.10 and x_overlap >= 0.20 and interlace_alts >= 2 and interlace_d < 1.25)
+                    )
+                    and not (thumb_dist < 0.50 and palm_dot < -0.40 and interlace_alts <= 1)
+                )
 
-                # 大拇指同邊 vs 不同邊判定準則:
-                # 內 (掌心相對): 兩手鏡像對稱 -> 大拇指對大拇指 (同邊: thumb_dot > 0.0 或 thumb_dist < 0.65)
-                # 外 (掌心覆蓋手背): 兩手同向疊合 -> 大拇指不同邊 (異邊: thumb_dot < -0.10 且 thumb_dist > 0.70)
-                thumbs_same_side = (thumb_dot > 0.0 or thumb_dist < 0.65)
-                thumbs_opposite_side = (thumb_dot < -0.10 and thumb_dist > 0.70)
+                # 【內】(掌心對掌心):
+                # 必須綁定「掌心面對面 (palm_dot < -0.40)」且雙手大拇指 3D 距離近 (thumb_dist < 0.55 或未指定)
+                thumbs_aligned = (thumb_dist < 0.55 or thumb_dist > 90.0)
+                is_inside = (
+                    not is_interlace
+                    and (
+                        (palm_dot < -0.40 and thumbs_aligned)
+                        or (palm_dot < -0.60)
+                    )
+                    and palm_dist < 1.35
+                )
 
-                is_inside = (not is_interlace and (
-                    thumbs_same_side or (palm_dot < -0.30 and not thumbs_opposite_side)
-                ) and palm_dist < 1.35)
-
-                is_outside = (not is_interlace and not is_inside and (
-                    thumbs_opposite_side
-                    or ((palm_dot > -0.20 or wrist_palm_diff >= 0.20 or axis_angle >= 28.0) and axis_angle < 75.0)
-                ) and palm_dist < 1.50)
+                # 【外】(掌心搓手背):
+                # 依據「掌背重疊」或「法向量同向 (palm_dot > -0.20)」獨立打分
+                is_outside = (
+                    not is_interlace
+                    and not is_inside
+                    and (
+                        palm_dot > -0.20
+                        or (wrist_palm_diff >= 0.20 and palm_dot > -0.30 and axis_angle < 60.0)
+                        or (thumb_dist > 0.70 and thumb_dist < 90.0 and palm_dot > -0.35 and axis_angle < 60.0)
+                    )
+                    and palm_dist < 1.50
+                )
 
                 if is_interlace:
-                    scores["interlace"] = 3.5
-                elif thumbs_opposite_side and not is_interlace:
-                    # 明確大拇指異邊：掌心覆蓋手背 (外)
-                    scores["outside"] = 3.4
+                    scores["interlace"] = 3.6
                 elif is_inside:
-                    # 明確大拇指同邊或掌心相對：掌心對搓 (內)
+                    # 明確掌心相對且拇指對齊：掌心對搓 (內)
                     scores["inside"] = 3.4
                 elif is_outside:
                     scores["outside"] = 1.8
