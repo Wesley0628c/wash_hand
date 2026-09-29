@@ -254,7 +254,7 @@ class WashHandRuleClassifier:
                 tip_contact = any(c["curl"] >= 80.0 and c["tips_to_palm"] < 1.0
                                   and c["spread"] < 0.32
                                   and c["tips_to_palm"] < c["knuckles_to_palm"] - 0.05 for c in contacts)
-                if knuckle_contact and palm_dist < 1.6 and not is_thumb_wrapped and not_thumb_grasp:
+                if knuckle_contact and palm_dist < 1.6 and not is_thumb_wrapped:
                     scores["knuckles"] = max(scores["knuckles"], 3.5)
                     # 握住手腕必要條件不滿足：指節貼在掌心，強烈抑制手腕
                     scores["wrist"] = max(0.0, scores["wrist"] - 2.0)
