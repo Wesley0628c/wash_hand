@@ -153,43 +153,39 @@ class WashHandRuleClassifier:
                 scores["wrist"] = grip_strength
 
             # ── 2. [大 Thumb] vs [弓 Knuckles] ────────────────────────────
+            # 【大】(旋轉搓洗拇指) 判斷條件：
+            # (1) 被握手四指空中高舉 (Open Hand In Air)：一手四指伸直 (max_curl > 150.0) 且開展，握持手握拳 (min_curl < 125.0)
+            # (2) 大拇指被握 (Thumb Inside Fist)：大拇指尖緊貼掌心/虎口 (min_p_to_th < 0.75 或 min_web_th < 0.75) 且另一手四指伸展 (max_curl > 140.0)
+            is_open_hand_in_air = (max_curl > 150.0 and min_curl < 125.0 and (max_spread > 0.22 or curl_diff > 25.0))
+            is_thumb_in_fist = ((min_p_to_th < 0.75 or min_web_th < 0.75) and max_curl > 140.0 and min_curl < 135.0)
+            is_thumb_wrapped = (is_open_hand_in_air or is_thumb_in_fist)
+
             # 【弓】(指背搓掌心): 
-            # 核心特徵：彎曲手的 4 指指節 (PIP) 緊貼平掌掌心 (min_kn_to_p < 0.85)，承托手大拇指外露在空氣中
+            # 核心特徵：彎曲手的 4 指指節 (PIP) 緊貼平掌掌心 (min_kn_to_p < 0.85)，且非大拇指握持
             is_knuckle_on_palm = (
                 min_curl < 142.0
-                and (min_kn_to_p < 0.85 or min_kn_to_p <= min_p_to_th + 0.10)
+                and min_kn_to_p < 0.85
+                and not is_thumb_wrapped
                 and palm_dist < 2.0
             )
 
-            # 【大】(旋轉搓洗拇指): 
-            # 核心特徵：大拇指被握在拳心內部 (min_p_to_th < 0.65 或 min_web_th < 0.65)
-            # 且拇指明顯比指節更靠近拳心 (min_p_to_th < min_kn_to_p - 0.10)，掌心無指節壓迫 (min_kn_to_p > 0.80)
-            is_thumb_wrapped = (
-                (min_p_to_th < 0.65 or min_web_th < 0.65)
-                and (min_p_to_th < min_kn_to_p - 0.10 or min_web_th < min_kn_to_p - 0.10)
-                and min_kn_to_p > 0.78
-            )
-            has_thumb_curl = (min_curl < 135.0 or min(left_angles[0], right_angles[0]) < 120.0)
-            has_spread_open_hand = (max_curl > 145.0 and max_spread > 0.24)
+            # 大評分：鎖定洗大拇指
+            if is_thumb_wrapped and scores["wrist"] <= 0.0:
+                thumb_score = 3.6
+                if is_open_hand_in_air:
+                    thumb_score = 3.8
+                elif min_p_to_th < 0.65 or min_web_th < 0.65:
+                    thumb_score = 3.7
+                scores["thumb"] = thumb_score
 
-            # 弓評分：指節壓在掌心即給予高分，不受外露拇指干擾
-            if is_knuckle_on_palm and scores["wrist"] <= 0.0:
+            # 弓評分：指節壓在掌心
+            if is_knuckle_on_palm and scores["wrist"] <= 0.0 and scores["thumb"] <= 0.0:
                 knuckle_score = 3.5
                 if min_kn_to_p < 0.75:
                     knuckle_score = 3.8
                 if curl_diff > 20.0 or min_kn_to_p < 0.65:
                     knuckle_score += 0.2
-                # 只有在大拇指真正深陷拳心且無指節壓掌時才抑制弓
-                if is_thumb_wrapped:
-                    knuckle_score = max(0.0, knuckle_score - 1.5)
                 scores["knuckles"] = knuckle_score
-
-            # 大評分：大拇指必須真正深入拳心且掌心無指節壓迫
-            if is_thumb_wrapped and has_thumb_curl and palm_dist < 1.60 and scores["wrist"] <= 0.0:
-                thumb_score = 3.5
-                if has_spread_open_hand:
-                    thumb_score = 3.8
-                scores["thumb"] = thumb_score
 
             # ── 3. [立 Fingertips] ────────────────────────────────────────
             # 指尖搓掌心：四指指尖聚攏，垂直在對側掌心中心旋轉
