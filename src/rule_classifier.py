@@ -114,6 +114,7 @@ class WashHandRuleClassifier:
             max_spread = max(l_s, r_s)
             mean_4_spread = (l_s + r_s) / 2.0 if l_s < 90 and r_s < 90 else min_4_spread
             thumb_dist = float(inter.get("thumb_to_thumb_dist", 99.0))
+            thumb_dot  = float(inter.get("thumb_dir_dot", 0.0))
 
             # Hand axis alignment angle (Wrist → Middle MCP)
             left_norm_lm  = features.get("left_norm")
@@ -228,6 +229,12 @@ class WashHandRuleClassifier:
             if (open_thumb_to_fist < 0.65 or min_web_th < 0.65) and eff_kn_dist > open_thumb_to_fist + 0.08:
                 score_gong = max(0.0, score_gong - 1.5)
 
+            # 抑制：雙手平掌對搓 (內) 或平掌貼手背 (外) 時，禁止誤判為弓
+            is_opposing_palms_flat = (palm_dot < -0.35 and min_curl > 125.0 and curl_diff < 22.0)
+            is_dorsum_overlay_flat = (thumb_dist > 0.70 and thumb_dot < -0.10 and min_curl > 125.0 and curl_diff < 22.0)
+            if is_opposing_palms_flat or is_dorsum_overlay_flat or (min_curl > 132.0 and curl_diff < 18.0):
+                score_gong = 0.0
+
             # ─── (C) 計算「立 (Fingertips)」證據分數 ───
             # 1. 指尖聚攏分：四指指尖聚集成束 (放寬視角門檻至 0.38)
             li_cluster_score = 0.0
@@ -266,13 +273,13 @@ class WashHandRuleClassifier:
                 elif score_da > score_gong:
                     scores["thumb"] = min(3.8, score_da)
                     is_thumb_wrapped = True
-                else:
+                elif score_gong > 0.0:
                     scores["knuckles"] = min(3.8, score_gong)
                     is_knuckle_on_palm = True
 
             # ── 5. [夾 Interlace] vs [內 Inside] vs [外 Outside] ───────────
-            # 雙手平掌伸展 (四指皆伸直平展 min_curl >= 142.0, max_curl > 150.0, palm_dist < 1.60)
-            if min_curl >= 142.0 and max_curl > 150.0 and palm_dist < 1.60:
+            # 雙手平掌伸展 (放寬至 min_curl >= 120.0, max_curl > 135.0, palm_dist < 1.60)
+            if min_curl >= 120.0 and max_curl > 135.0 and palm_dist < 1.60:
                 l_s_val = float(inter.get("left_four_finger_spread", 99.0))
                 r_s_val = float(inter.get("right_four_finger_spread", 99.0))
                 mean_4_spread = (l_s_val + r_s_val) / 2.0 if l_s_val < 90 and r_s_val < 90 else min_4_spread
@@ -300,13 +307,15 @@ class WashHandRuleClassifier:
                 ) and palm_dist < 1.50)
 
                 if is_interlace:
-                    scores["interlace"] = 3.5
+                    scores["interlace"] = 3.6
                 elif thumbs_opposite_side and not is_interlace:
                     # 明確大拇指異邊：掌心覆蓋手背 (外)
-                    scores["outside"] = 3.4
+                    scores["outside"] = 3.6
+                    scores["knuckles"] = max(0.0, scores["knuckles"] - 2.0)
                 elif is_inside:
                     # 明確大拇指同邊或掌心相對：掌心對搓 (內)
-                    scores["inside"] = 3.4
+                    scores["inside"] = 3.6
+                    scores["knuckles"] = max(0.0, scores["knuckles"] - 2.0)
                 elif is_outside:
                     scores["outside"] = 1.8
                 else:
@@ -316,7 +325,7 @@ class WashHandRuleClassifier:
             # 接觸微幾何增益 (Directional Contact Evidence)
             contacts = inter.get("directional_contacts", [])
             is_thumb_wrapped = (min_p_to_th < 0.75 or min_web_th < 0.75)
-            if contacts and not is_flat_rubbing:
+            if contacts and not is_flat_rubbing and scores["inside"] <= 0.0 and scores["outside"] <= 0.0:
                 knuckle_contact = any(c["curl"] <= 135.0 and c["knuckles_to_palm"] < 0.85
                                       and c["knuckles_to_palm"] <= c["tips_to_palm"] + 0.12 for c in contacts)
                 tip_contact = any(c["curl"] >= 80.0 and c["tips_to_palm"] < 1.0
