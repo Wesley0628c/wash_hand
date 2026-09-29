@@ -99,6 +99,7 @@ class WashHandRuleClassifier:
             x_overlap      = float(inter.get("finger_x_overlap", 0.0))
             min_4_spread   = float(inter.get("min_four_finger_spread", 99.0))
             interlace_alts = int(inter.get("interlace_alternations", 0))
+            velocity       = float(features.get("shape_speed", features.get("velocity", 0.0) * 30.0) / 30.0)
 
             left_angles  = features.get("left_angles",  [0.0] * 5)
             right_angles = features.get("right_angles", [0.0] * 5)
@@ -153,7 +154,7 @@ class WashHandRuleClassifier:
                 scores["wrist"] = grip_strength
 
             # ── 2. [大 Thumb] vs [弓 Knuckles] ────────────────────────────
-            # 定義平掌/伸展手 (Open Hand) 與 彎曲手 (Curled Hand) 的指向性特徵：
+            # 定義平掌/伸展手 (Open Hand) 與 彎曲/包覆手 (Curled/Grip Hand) 的指向性幾何關係：
             l_4_curl = float(np.mean(left_angles[1:])) if len(left_angles) >= 5 else 180.0
             r_4_curl = float(np.mean(right_angles[1:])) if len(right_angles) >= 5 else 180.0
             l_p_to_r_th = float(inter.get("left_palm_to_right_thumb", 99.0))
@@ -162,50 +163,82 @@ class WashHandRuleClassifier:
             r_kn_to_l_p = float(inter.get("right_knuckles_to_left_palm", 99.0))
 
             if l_4_curl >= r_4_curl:
-                # 左手為伸展手，右手為彎曲/握拳手
-                open_thumb_to_fist = r_p_to_l_th       # 右拳到左拇指
-                curled_kn_to_palm  = r_kn_to_l_p       # 右手指節到左掌心
+                # 左手為伸展手/被搓手，右手為包覆/彎曲手
+                open_thumb_to_fist = r_p_to_l_th       # 包覆手(右) 到 被搓拇指(左)
+                curled_kn_to_palm  = r_kn_to_l_p       # 彎曲手指節(右) 到 承接掌心(左)
             else:
-                # 右手為伸展手，左手為彎曲/握拳手
-                open_thumb_to_fist = l_p_to_r_th       # 左拳到右拇指
-                curled_kn_to_palm  = l_kn_to_r_p       # 左手指節到右掌心
+                # 右手為伸展手/被搓手，左手為包覆/彎曲手
+                open_thumb_to_fist = l_p_to_r_th       # 包覆手(左) 到 被搓拇指(右)
+                curled_kn_to_palm  = l_kn_to_r_p       # 彎曲手指節(左) 到 承接掌心(右)
 
-            # 【大】(旋轉搓洗拇指): 
-            # 核心特徵：伸展手的大拇指深入握拳手掌心/虎口 (open_thumb_to_fist < 0.70)，且握拳手指節未壓在伸展手掌心
-            is_thumb_wrapped = (
-                open_thumb_to_fist < 0.70
-                and (curled_kn_to_palm > open_thumb_to_fist + 0.08 or curled_kn_to_palm > 0.78)
-                and max_curl > 140.0
-                and min_curl < 135.0
-            )
+            # ─── (A) 計算「大 (Thumb)」證據分數 ───
+            # 1. 拇指接觸分：被搓手拇指深入包覆手拳心/虎口，且目標是拇指而非手腕
+            thumb_contact_score = 0.0
+            if open_thumb_to_fist < 0.75 or min_web_th < 0.75 or min_p_to_th < 0.70:
+                thumb_contact_score = 1.8
+                if open_thumb_to_fist < 0.60 or min_web_th < 0.60:
+                    thumb_contact_score = 2.2
+                if open_thumb_to_fist < min_p_to_w:
+                    thumb_contact_score += 0.3
 
-            # 【弓】(指背搓掌心): 
-            # 核心特徵：彎曲手指節緊貼伸展手掌心 (curled_kn_to_palm < 0.82 或 min_kn_to_p < 0.82)
-            # 且伸展手大拇指在空氣中懸空外露 (open_thumb_to_fist > 0.70)
-            is_knuckle_on_palm = (
-                min_curl < 142.0
-                and (curled_kn_to_palm < 0.82 or min_kn_to_p < 0.82)
-                and not is_thumb_wrapped
-                and palm_dist < 2.0
-            )
+            # 2. 包覆手握形分：包覆手握拳、被搓手伸展/展開
+            thumb_grip_score = 0.0
+            if min_curl < 135.0:
+                thumb_grip_score += 0.8
+                if min_curl < 120.0:
+                    thumb_grip_score += 0.4
+            if max_curl > 135.0:
+                thumb_grip_score += 0.5
+                if max_curl > 150.0:
+                    thumb_grip_score += 0.3
 
-            # 大評分：鎖定洗大拇指
-            if is_thumb_wrapped and scores["wrist"] <= 0.0:
-                thumb_score = 3.6
-                if max_curl > 150.0 and min_curl < 120.0:
-                    thumb_score = 3.8
-                elif open_thumb_to_fist < 0.55:
-                    thumb_score = 3.7
-                scores["thumb"] = thumb_score
+            # 3. 動作搓動/旋轉加分
+            thumb_motion_score = 0.3 if velocity > 0.010 else 0.0
 
-            # 弓評分：指節壓在掌心
-            if is_knuckle_on_palm and scores["wrist"] <= 0.0 and scores["thumb"] <= 0.0:
-                knuckle_score = 3.5
-                if curled_kn_to_palm < 0.75 or min_kn_to_p < 0.75:
-                    knuckle_score = 3.8
-                if curl_diff > 20.0 or min_kn_to_p < 0.65:
-                    knuckle_score += 0.2
-                scores["knuckles"] = knuckle_score
+            score_da = thumb_contact_score + thumb_grip_score + thumb_motion_score
+            # 抑制：若指節明顯貼在掌心且拇指未深握，扣減大分數
+            if (curled_kn_to_palm < 0.75 or min_kn_to_p < 0.75) and open_thumb_to_fist > 0.70:
+                score_da = max(0.0, score_da - 1.5)
+
+            # ─── (B) 計算「弓 (Knuckles)」證據分數 ───
+            # 1. 指節貼掌分：指節 PIP 緊貼對側平掌掌心中央
+            knuckle_to_palm_score = 0.0
+            eff_kn_dist = min(curled_kn_to_palm, min_kn_to_p)
+            if eff_kn_dist < 0.85:
+                knuckle_to_palm_score = 1.8
+                if eff_kn_dist < 0.75:
+                    knuckle_to_palm_score = 2.2
+                if eff_kn_dist < 0.65:
+                    knuckle_to_palm_score += 0.3
+
+            # 2. 弓手與承接手形態分：彎曲手呈弓形、承接手平掌
+            gong_finger_score = 0.0
+            if min_curl < 140.0:
+                gong_finger_score += 0.8
+            if max_curl > 140.0:
+                gong_finger_score += 0.5
+            if open_thumb_to_fist > 0.70:  # 伸展手拇指在空中懸空未被包住
+                gong_finger_score += 0.5
+
+            # 3. 掌心搓動分
+            gong_motion_score = 0.3 if velocity > 0.010 else 0.0
+
+            score_gong = knuckle_to_palm_score + gong_finger_score + gong_motion_score
+            # 抑制：若大拇指被深握且指節遠離掌心，扣減弓分數
+            if (open_thumb_to_fist < 0.65 or min_web_th < 0.65) and eff_kn_dist > open_thumb_to_fist + 0.08:
+                score_gong = max(0.0, score_gong - 1.5)
+
+            # ─── (C) 綜合競爭裁決 ───
+            is_thumb_wrapped = False
+            is_knuckle_on_palm = False
+
+            if scores["wrist"] <= 0.0 and max(score_da, score_gong) >= 3.0:
+                if score_da > score_gong:
+                    scores["thumb"] = min(3.8, score_da)
+                    is_thumb_wrapped = True
+                else:
+                    scores["knuckles"] = min(3.8, score_gong)
+                    is_knuckle_on_palm = True
 
             # ── 3. [立 Fingertips] ────────────────────────────────────────
             # 指尖搓掌心：四指指尖聚攏，垂直在對側掌心中心旋轉
