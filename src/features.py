@@ -440,6 +440,20 @@ def extract_hand_features(
             previous_relative = prev_left_hand[:, :2] - prev_right_hand[:, :2]
             relative_motion_speed = float(np.mean(np.linalg.norm(current_relative - previous_relative, axis=1))) / avg_scale / dt
 
+        left_speed = 0.0
+        right_speed = 0.0
+        motion_asymmetry = 0.0
+        if prev_left_hand is not None and dt > 0:
+            left_speed = float(np.linalg.norm(left_hand[0, :2] - prev_left_hand[0, :2])) / avg_scale / dt
+        if prev_right_hand is not None and dt > 0:
+            right_speed = float(np.linalg.norm(right_hand[0, :2] - prev_right_hand[0, :2])) / avg_scale / dt
+        if left_speed + right_speed > 1e-4:
+            motion_asymmetry = float(abs(left_speed - right_speed) / (left_speed + right_speed))
+
+        inter_hand_features["left_speed"] = left_speed
+        inter_hand_features["right_speed"] = right_speed
+        inter_hand_features["motion_asymmetry"] = motion_asymmetry
+
     inter_hand_features["finger_x_overlap"] = finger_overlap
     inter_hand_features["directional_contacts"] = contacts
     inter_hand_features["left_four_finger_spread"] = left_four_finger_spread

@@ -286,10 +286,17 @@ class WashHandRuleClassifier:
                     scores["knuckles"] = min(3.8, score_gong)
                     is_knuckle_on_palm = True
 
-            # ── 5. [夾] vs [外] vs [內]: 依主要接觸位置評分 ───────────
-            # 核心原則：close_pairs 只代表「兩手很近」，不代表「夾」
-            # 夾必須有手指確實交錯的額外證據（axis_angle + interlace_d + alts）
-            if min_curl >= 120.0 and max_curl > 135.0 and palm_dist < 1.60:
+            # ── 5. [夾] vs [外] vs [內]: 依主要接觸位置與運動不對稱性評分 ───────────
+            motion_asym = float(inter.get("motion_asymmetry", 0.0))
+            left_spd    = float(inter.get("left_speed", 0.0))
+            right_spd   = float(inter.get("right_speed", 0.0))
+            max_spd     = max(left_spd, right_spd)
+            min_spd     = min(left_spd, right_spd)
+            # 做「外」時，上方手掌在手背上搓動 (max_spd > 0.02)，下方手相對穩定充當支撐 (min_spd < 0.04)
+            is_asymmetric_rub = (motion_asym > 0.35 and max_spd > 0.018 and min_spd < 0.040)
+
+            # 放寬手指微屈門檻：支援平掌與微屈壓手搓手背 (min_curl >= 105.0)
+            if (min_curl >= 105.0 and max_curl > 130.0 and palm_dist < 1.65) or (is_asymmetric_rub and palm_dist < 1.60):
                 l_s_val = float(inter.get("left_four_finger_spread", 99.0))
                 r_s_val = float(inter.get("right_four_finger_spread", 99.0))
                 mean_4_spread   = (l_s_val + r_s_val) / 2.0 if l_s_val < 90 and r_s_val < 90 else min_4_spread
@@ -299,7 +306,7 @@ class WashHandRuleClassifier:
                 l2r_d           = float(inter.get("left_to_right_interlace_depth", 99.0))
                 r2l_d           = float(inter.get("right_to_left_interlace_depth", 99.0))
                 close_pairs     = int(inter.get("cross_finger_close_pairs", 0))
-                overlap_ratio   = float(inter.get("interlace_overlap_ratio", 0.0))
+                overlap_ratio   = max(float(inter.get("interlace_overlap_ratio", 0.0)), float(inter.get("finger_x_overlap", 0.0)))
 
                 # 拇指同邊 / 異邊
                 thumbs_same_side     = (thumb_dot > 0.0 or thumb_dist < 0.60)
@@ -351,6 +358,9 @@ class WashHandRuleClassifier:
                 # 抑制：非對稱接觸偏強（只在低角度時扣，高角度 X 交叉本來就不對稱）
                 if depth_asym > 0.40 and axis_angle < 30.0:
                     s_jia -= 1.5
+                # 抑制：運動不對稱 (外) 時非夾
+                if is_asymmetric_rub and axis_angle < 35.0:
+                    s_jia -= 2.0
                 # 抑制：拇指主導 → 大
                 if thumb_dist < 0.45:
                     s_jia -= 2.5
@@ -359,8 +369,10 @@ class WashHandRuleClassifier:
                     s_jia -= 2.0
 
                 # ═══ 外 score ═════════════════════════════════════════════
-                # 判斷重點：一手指尖靠近另一手指根（不對稱）+ 拇指異邊 + 低交叉角度
+                # 判斷重點：一動一靜運動不對稱 + 一手指尖靠近另一手指根（不對稱）+ 拇指異邊/掌心同向 + 低交叉角度
                 s_wai = 0.0
+                if is_asymmetric_rub:
+                    s_wai += 2.8                          # 上方手搓動、下方手相對靜止 (外核心動態特徵)
                 if min_one_d < 0.75:
                     s_wai += 1.5                          # 一手指尖靠近另一手指根
                 if min_one_d < 0.55:
@@ -369,6 +381,12 @@ class WashHandRuleClassifier:
                     s_wai += 1.5                          # 非對稱接觸（外核心特徵）
                 if depth_asym > 0.50:
                     s_wai += 1.0                          # 更強的非對稱
+                # 掌心同向朝向 (一掌面覆蓋一手背)
+                if palm_dot > 0.25:
+                    if is_asymmetric_rub:
+                        s_wai += 2.5                      # 掌心同向 + 運動不對稱滑動 → 強外
+                    else:
+                        s_wai += 1.2                      # 僅靜態同向無滑動 → 弱外候選
                 # 拇指異邊：只在低 axis_angle 時給滿分（外＝低角度疊合，夾＝高角度交叉）
                 if thumbs_opposite_side:
                     if axis_angle < 30.0:                 # 低角度 → 確實是外
@@ -393,7 +411,7 @@ class WashHandRuleClassifier:
                 if palm_dot < -0.50 and thumbs_same_side:
                     s_wai -= 2.0
                 # 抑制：拇指同邊 → 不是外
-                if thumbs_same_side:
+                if thumbs_same_side and palm_dot < -0.20:
                     s_wai -= 1.5
 
                 # ═══ 內 score ═════════════════════════════════════════════
@@ -401,14 +419,20 @@ class WashHandRuleClassifier:
                 s_nei = 0.0
                 if palm_dist < 1.20 and palm_dot < -0.25:
                     s_nei += 3.0                          # 掌心相對靠近（核心強信號）
-                if thumbs_same_side:
-                    s_nei += 2.5                          # 拇指同邊（強信號）
+                if thumbs_same_side and palm_dot < -0.10:
+                    s_nei += 2.5                          # 拇指同邊 + 掌心相對
                 if interlace_alts < 2:
                     s_nei += 1.5                          # 無明顯交錯（重要正向加分）
                 if depth_asym < 0.20:
                     s_nei += 0.5                          # 對稱接觸
                 if close_pairs < 4:
                     s_nei += 0.5                          # 指尖未互相插入
+                # 抑制：運動不對稱 (外) → 內要求雙手對稱同動
+                if is_asymmetric_rub:
+                    s_nei -= 2.5
+                # 抑制：掌心同向 (一掌蓋一背) → 絕非內
+                if palm_dot > 0.20:
+                    s_nei -= 3.0
                 # 抑制：拇指異邊 → 不是內
                 if thumbs_opposite_side:
                     s_nei -= 2.5
@@ -423,9 +447,9 @@ class WashHandRuleClassifier:
                 SCORE_MIN = 2.0
 
                 # 優先判斷：明確內（掌心相對強 + 完全無交錯）
-                clear_inside  = (s_nei >= 5.0 and interlace_alts < 2)
-                # 優先判斷：明確外（拇指異邊強 + 完全無交錯）
-                clear_outside = (s_wai >= 4.5 and interlace_alts < 2)
+                clear_inside  = (s_nei >= 5.0 and interlace_alts < 2 and palm_dot < -0.25)
+                # 優先判斷：明確外（拇指異邊強或運動不對稱強 + 完全無交錯）
+                clear_outside = ((s_wai >= 4.5 or (is_asymmetric_rub and s_wai >= 3.5)) and interlace_alts < 2)
                 # 夾必要條件：一定要有真正交錯的證據
                 # 優先以 fingers_truly_interlaced 判斷；次選：中度交錯（alts + ratio + 足夠配對）
                 jia_qualified = (
@@ -444,14 +468,17 @@ class WashHandRuleClassifier:
                     scores["interlace"] = min(3.8, 2.0 + s_jia * 0.25)
                 elif max(s_wai, s_nei) >= SCORE_MIN:
                     if s_wai >= s_nei:
-                        scores["outside"] = min(3.8, 2.0 + s_wai * 0.25)
+                        scores["outside"] = min(3.8, 1.8 + (s_wai - 2.0) * 0.20)
                         scores["knuckles"] = max(0.0, scores["knuckles"] - 1.5)
                     else:
                         scores["inside"] = min(3.8, 2.0 + s_nei * 0.25)
                         scores["knuckles"] = max(0.0, scores["knuckles"] - 1.5)
                 else:
                     # 無明確信號，給低分候選
-                    if palm_dist < 1.35:
+                    if palm_dot > 0.20 and palm_dist < 1.40:
+                        scores["outside"] = 1.7
+                        scores["inside"]  = 1.3
+                    elif palm_dist < 1.35:
                         scores["inside"]  = max(scores["inside"],  1.5)
                         scores["outside"] = max(scores["outside"], 1.5)
 
@@ -514,10 +541,10 @@ class WashHandRuleClassifier:
             if has_valid_active_hand and 130.0 <= mean_4_angle < 155.0 and spread_4 <= 0.22 and scores["knuckles"] <= 0.0 and scores["thumb"] <= 0.0:
                 scores["fingertips"] = 2.3
 
-            # [外 Outside / 內 Inside — single hand]: 單手平掌 (中性候選，交由時序追蹤器與手背特徵裁決)
+            # [外 Outside / 內 Inside — single hand]: 單手平掌 (中性候選，由時序追蹤器與手背特徵裁決)
             if has_valid_active_hand and mean_4_angle >= 135.0 and scores["wrist"] <= 0.0 and scores["thumb"] <= 0.0:
-                scores["outside"] = 1.6
                 scores["inside"] = 1.6
+                scores["outside"] = 1.2
 
             if max(scores.values()) <= 0.0:
                 scores["other"] = 2.0
