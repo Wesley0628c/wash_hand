@@ -201,6 +201,15 @@ class WashHandRuleClassifier:
             if (curled_kn_to_palm < 0.75 or min_kn_to_p < 0.75) and open_thumb_to_fist > 0.70:
                 score_da = max(0.0, score_da - 1.5)
 
+            # 抑制：外（掌心搓手背）時，被壓手拇指自然靠近壓手 → 不應觸發大
+            # 拇指異邊（thumb_dot < -0.15 & thumb_dist > 0.72）是外的強信號
+            _th_dot_b2  = float(inter.get("thumb_dir_dot", 0.0))
+            _th_dist_b2 = float(inter.get("thumb_to_thumb_dist", 99.0))
+            _thumbs_opp_b2 = (_th_dot_b2 < -0.15 and _th_dist_b2 > 0.72)
+            if _thumbs_opp_b2 and palm_dist < 1.50 and min_curl > 118.0:
+                # 外的手型（拇指異邊 + 雙手平掌），非真正握拇指動作
+                score_da = max(0.0, score_da - 2.0)
+
             # ─── (B) 計算「弓 (Knuckles)」證據分數 ───
             # 1. 指節貼掌分：指節 PIP 緊貼對側平掌掌心中央，且指節深於指尖
             knuckle_to_palm_score = 0.0
@@ -277,55 +286,174 @@ class WashHandRuleClassifier:
                     scores["knuckles"] = min(3.8, score_gong)
                     is_knuckle_on_palm = True
 
-            # ── 5. [夾 Interlace] vs [內 Inside] vs [外 Outside] ───────────
-            # 雙手平掌伸展 (放寬至 min_curl >= 120.0, max_curl > 135.0, palm_dist < 1.60)
+            # ── 5. [夾] vs [外] vs [內]: 依主要接觸位置評分 ───────────
+            # 核心原則：close_pairs 只代表「兩手很近」，不代表「夾」
+            # 夾必須有手指確實交錯的額外證據（axis_angle + interlace_d + alts）
             if min_curl >= 120.0 and max_curl > 135.0 and palm_dist < 1.60:
                 l_s_val = float(inter.get("left_four_finger_spread", 99.0))
                 r_s_val = float(inter.get("right_four_finger_spread", 99.0))
-                mean_4_spread = (l_s_val + r_s_val) / 2.0 if l_s_val < 90 and r_s_val < 90 else min_4_spread
+                mean_4_spread   = (l_s_val + r_s_val) / 2.0 if l_s_val < 90 and r_s_val < 90 else min_4_spread
                 wrist_palm_diff = abs(wrist_dist - palm_dist)
-                thumb_dist = float(inter.get("thumb_to_thumb_dist", 99.0))
-                thumb_dot  = float(inter.get("thumb_dir_dot", 0.0))
+                thumb_dist      = float(inter.get("thumb_to_thumb_dist", 99.0))
+                thumb_dot       = float(inter.get("thumb_dir_dot", 0.0))
+                l2r_d           = float(inter.get("left_to_right_interlace_depth", 99.0))
+                r2l_d           = float(inter.get("right_to_left_interlace_depth", 99.0))
+                close_pairs     = int(inter.get("cross_finger_close_pairs", 0))
+                overlap_ratio   = float(inter.get("interlace_overlap_ratio", 0.0))
 
-                # 【夾】(十指交錯): 支援雙手 X 形交叉與 2~4 次手指穿插
-                is_interlace = (
-                    (
-                        (interlace_alts >= 3 and x_overlap >= 0.20 and mean_4_spread >= 0.24 and interlace_d < 1.25)
-                        or (interlace_alts >= 2 and axis_angle > 24.0 and x_overlap >= 0.20 and mean_4_spread >= 0.24 and interlace_d < 1.25)
-                    )
-                    and not (thumb_dist < 0.45 and palm_dot < -0.45 and interlace_alts <= 1)
+                # 拇指同邊 / 異邊
+                thumbs_same_side     = (thumb_dot > 0.0 or thumb_dist < 0.60)
+                thumbs_opposite_side = (thumb_dot < -0.15 and thumb_dist > 0.72)
+
+                # 非對稱度：外 特有（一手指尖貼另一手手背，另方向遠）
+                depth_asym = abs(l2r_d - r2l_d)
+                min_one_d  = min(l2r_d, r2l_d)
+
+                # 手指真正交錯的必要條件：交替投影 + 兩手有角度 + 指尖深入到對方指根
+                # axis_angle > 15°：內時兩手鏡像平行（≈ 0~10°），夾時兩手有交叉角度（≈ 20~80°）
+                # interlace_d < 1.05：指尖確實接近對方指根（比舊版 < 1.0 稍寬鬆以涵蓋更多夾的姿勢）
+                fingers_truly_interlaced = (
+                    interlace_alts >= 2
+                    and overlap_ratio >= 0.35
+                    and axis_angle > 15.0        # 從 25° 放寬至 15°，仍可排除內（0~10°）
+                    and interlace_d < 1.05       # 從 0.90 放寬至 1.05（涵蓋更多真實夾的姿勢）
                 )
 
-                # 大拇指同邊 vs 不同邊判定準則:
-                # 內 (掌心相對): 兩手鏡像對稱 -> 大拇指對大拇指 (同邊: thumb_dot > 0.0 或 thumb_dist < 0.65)
-                # 外 (掌心覆蓋手背): 兩手同向疊合 -> 大拇指不同邊 (異邊: thumb_dot < -0.10 且 thumb_dist > 0.70)
-                thumbs_same_side = (thumb_dot > 0.0 or thumb_dist < 0.65)
-                thumbs_opposite_side = (thumb_dot < -0.10 and thumb_dist > 0.70)
+                # ═══ 夾 score ═════════════════════════════════════════════
+                # 原則：close_pairs 只加少量分，真正的交錯才加大分
+                s_jia = 0.0
+                if palm_dist < 1.20:
+                    s_jia += 0.5                          # 兩手靠近（低分，只是前提）
+                if close_pairs >= 4:
+                    s_jia += 0.8                          # 多根手指靠近（只代表「近」）
+                if close_pairs >= 8:
+                    s_jia += 0.5                          # 更多靠近（仍只是「近」）
+                if fingers_truly_interlaced:
+                    s_jia += 3.0                          # 手指確實交錯（核心強信號）
+                if fingers_truly_interlaced and close_pairs >= 6:
+                    s_jia += 1.5                          # 交錯 + 大量接觸 ≈ 真正夾
+                if interlace_alts >= 3 and fingers_truly_interlaced:
+                    s_jia += 0.5                          # 高度交錯
+                # axis_angle 高（兩手 X 交叉）+ 手指交替 → 夾的強增益
+                if axis_angle > 35.0 and interlace_alts >= 2:
+                    s_jia += 2.0                          # X 交叉 + 交替 = 夾的特徵
+                if axis_angle > 50.0 and interlace_alts >= 1:
+                    s_jia += 1.0                          # 更大角度的 X 交叉
+                # 抑制：明確是內（掌心相對 + 無交錯）→ 強力扣分
+                if palm_dot < -0.25 and palm_dist < 1.20 and interlace_alts < 2:
+                    s_jia -= 3.0
+                # 抑制：外的信號（低角度 + 拇指異邊）→ X 交叉時不扣（那是夾）
+                if depth_asym > 0.25 and thumbs_opposite_side and axis_angle < 30.0:
+                    s_jia -= 2.5
+                # 抑制：拇指同邊是內的強信號
+                if thumbs_same_side and palm_dot < -0.35:
+                    s_jia -= 2.5
+                # 抑制：非對稱接觸偏強（只在低角度時扣，高角度 X 交叉本來就不對稱）
+                if depth_asym > 0.40 and axis_angle < 30.0:
+                    s_jia -= 1.5
+                # 抑制：拇指主導 → 大
+                if thumb_dist < 0.45:
+                    s_jia -= 2.5
+                # 抑制：指尖壓掌心 → 立/弓
+                if min_t_to_p < 0.50:
+                    s_jia -= 2.0
 
-                is_inside = (not is_interlace and (
-                    thumbs_same_side or (palm_dot < -0.30 and not thumbs_opposite_side)
-                ) and palm_dist < 1.35)
+                # ═══ 外 score ═════════════════════════════════════════════
+                # 判斷重點：一手指尖靠近另一手指根（不對稱）+ 拇指異邊 + 低交叉角度
+                s_wai = 0.0
+                if min_one_d < 0.75:
+                    s_wai += 1.5                          # 一手指尖靠近另一手指根
+                if min_one_d < 0.55:
+                    s_wai += 0.5
+                if depth_asym > 0.25:
+                    s_wai += 1.5                          # 非對稱接觸（外核心特徵）
+                if depth_asym > 0.50:
+                    s_wai += 1.0                          # 更強的非對稱
+                # 拇指異邊：只在低 axis_angle 時給滿分（外＝低角度疊合，夾＝高角度交叉）
+                if thumbs_opposite_side:
+                    if axis_angle < 30.0:                 # 低角度 → 確實是外
+                        s_wai += 2.5
+                    elif axis_angle < 45.0:               # 中角度 → 可能是夾或外
+                        s_wai += 1.2
+                    else:                                 # 高角度（X 交叉）→ 更像夾
+                        s_wai += 0.3
+                elif not thumbs_same_side:
+                    s_wai += 0.5
+                if interlace_alts < 2 or overlap_ratio < 0.30:
+                    s_wai += 1.0                          # 手指沒有明顯交錯
+                # 抑制：高 axis_angle（X 交叉）→ 傾向夾，不是外
+                if axis_angle > 45.0:
+                    s_wai -= 1.5
+                if axis_angle > 60.0:
+                    s_wai -= 1.0                          # 更強的 X 交叉
+                # 抑制：手指確實交錯 → 夾，不是外
+                if fingers_truly_interlaced:
+                    s_wai -= 2.5
+                # 抑制：掌心相對且強 → 不是外
+                if palm_dot < -0.50 and thumbs_same_side:
+                    s_wai -= 2.0
+                # 抑制：拇指同邊 → 不是外
+                if thumbs_same_side:
+                    s_wai -= 1.5
 
-                is_outside = (not is_interlace and not is_inside and (
-                    thumbs_opposite_side
-                    or ((palm_dot > -0.20 or wrist_palm_diff >= 0.20 or axis_angle >= 28.0) and axis_angle < 75.0)
-                ) and palm_dist < 1.50)
+                # ═══ 內 score ═════════════════════════════════════════════
+                # 判斷重點：掌心對掌心（對稱）+ 拇指同邊 + 無明顯交錯
+                s_nei = 0.0
+                if palm_dist < 1.20 and palm_dot < -0.25:
+                    s_nei += 3.0                          # 掌心相對靠近（核心強信號）
+                if thumbs_same_side:
+                    s_nei += 2.5                          # 拇指同邊（強信號）
+                if interlace_alts < 2:
+                    s_nei += 1.5                          # 無明顯交錯（重要正向加分）
+                if depth_asym < 0.20:
+                    s_nei += 0.5                          # 對稱接觸
+                if close_pairs < 4:
+                    s_nei += 0.5                          # 指尖未互相插入
+                # 抑制：拇指異邊 → 不是內
+                if thumbs_opposite_side:
+                    s_nei -= 2.5
+                # 抑制：手指確實交錯 → 不是內
+                if fingers_truly_interlaced:
+                    s_nei -= 3.0
+                # 抑制：非對稱明顯 → 不是內
+                if depth_asym > 0.40:
+                    s_nei -= 2.0
 
-                if is_interlace:
-                    scores["interlace"] = 3.6
-                elif thumbs_opposite_side and not is_interlace:
-                    # 明確大拇指異邊：掌心覆蓋手背 (外)
-                    scores["outside"] = 3.6
-                    scores["knuckles"] = max(0.0, scores["knuckles"] - 2.0)
-                elif is_inside:
-                    # 明確大拇指同邊或掌心相對：掌心對搓 (內)
-                    scores["inside"] = 3.6
-                    scores["knuckles"] = max(0.0, scores["knuckles"] - 2.0)
-                elif is_outside:
-                    scores["outside"] = 1.8
+                # ═══ 優先規則 + 最高分勝出 ════════════════════════════════
+                SCORE_MIN = 2.0
+
+                # 優先判斷：明確內（掌心相對強 + 完全無交錯）
+                clear_inside  = (s_nei >= 5.0 and interlace_alts < 2)
+                # 優先判斷：明確外（拇指異邊強 + 完全無交錯）
+                clear_outside = (s_wai >= 4.5 and interlace_alts < 2)
+                # 夾必要條件：一定要有真正交錯的證據
+                # 優先以 fingers_truly_interlaced 判斷；次選：中度交錯（alts + ratio + 足夠配對）
+                jia_qualified = (
+                    fingers_truly_interlaced
+                    or (interlace_alts >= 2 and overlap_ratio >= 0.35 and close_pairs >= 5 and axis_angle > 10.0)
+                    or (interlace_alts >= 3 and close_pairs >= 6)
+                )
+
+                if clear_inside:
+                    scores["inside"] = min(3.8, 2.0 + s_nei * 0.20)
+                    scores["knuckles"] = max(0.0, scores["knuckles"] - 1.5)
+                elif clear_outside:
+                    scores["outside"] = min(3.8, 2.0 + s_wai * 0.20)
+                    scores["knuckles"] = max(0.0, scores["knuckles"] - 1.5)
+                elif jia_qualified and s_jia >= 3.0 and s_jia >= s_wai and s_jia >= s_nei:
+                    scores["interlace"] = min(3.8, 2.0 + s_jia * 0.25)
+                elif max(s_wai, s_nei) >= SCORE_MIN:
+                    if s_wai >= s_nei:
+                        scores["outside"] = min(3.8, 2.0 + s_wai * 0.25)
+                        scores["knuckles"] = max(0.0, scores["knuckles"] - 1.5)
+                    else:
+                        scores["inside"] = min(3.8, 2.0 + s_nei * 0.25)
+                        scores["knuckles"] = max(0.0, scores["knuckles"] - 1.5)
                 else:
-                    scores["inside"] = 2.0
-                    scores["outside"] = 2.0
+                    # 無明確信號，給低分候選
+                    if palm_dist < 1.35:
+                        scores["inside"]  = max(scores["inside"],  1.5)
+                        scores["outside"] = max(scores["outside"], 1.5)
 
             # 接觸微幾何增益 (Directional Contact Evidence)
             contacts = inter.get("directional_contacts", [])
@@ -374,10 +502,8 @@ class WashHandRuleClassifier:
             ):
                 scores["wrist"] = 2.5
 
-            # [大 Thumb — single hand]: 嚴格要求單手握拳握持姿態，嚴禁平掌誤判
-            is_single_thumb_grip = (mean_4_angle < 120.0 and thumb_angle < 115.0 and velocity > 0.015 and thumb_tip_w >= 0.60)
-            if is_single_thumb_grip and scores["wrist"] <= 0.0:
-                scores["thumb"] = 2.5
+            # [大 Thumb — single hand]: 大（旋轉搓大拇指）需要雙手，單手偵測時不可能成立，不作判斷
+            # is_single_thumb_grip = False  ← 永遠不觸發
 
             # [弓 Knuckles — single hand]: 當四指彎曲呈弓形 (45.0 <= mean_4_angle < 135.0) 且非握持大拇指
             has_valid_active_hand = (len(active_angles) >= 5 and any(a > 30.0 for a in active_angles))

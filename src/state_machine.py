@@ -273,10 +273,12 @@ class WashHandStateMachine:
             "contiguous_times": self.contiguous_times,
         }
 
-    def get_fsm_feedback(self, detected_label: str) -> str:
+    def get_fsm_feedback(self, detected_label: str, confidence: Optional[float] = None) -> str:
         """Generate context-aware FSM guidance and feedback message."""
         if self.is_completed:
             return "🎉 恭喜！七步洗手已全部標準完成！"
+
+        conf_str = f"（信心度 {int(confidence * 100)}%）" if (confidence is not None and confidence > 0.0) else ""
 
         target = self._get_target_step()
         if self.mode == "sequence" and target:
@@ -285,8 +287,7 @@ class WashHandStateMachine:
             step_num = self.current_step_idx + 1
 
             if detected_label == target:
-                progress_pct = int(min(1.0, self.step_timer / max(0.01, self.step_duration)) * 100)
-                return f"步驟 {step_num}/7 正確：【{target_zh}】{target_desc}（進度 {progress_pct}%）"
+                return f"步驟 {step_num}/7 正確：【{target_zh}】{target_desc}{conf_str}"
             elif detected_label in STEPS_ORDER:
                 det_zh = STEPS_ZH.get(detected_label, detected_label)
                 return f"目前步驟為 {step_num}/7【{target_zh}】，請進行【{target_zh}】搓洗（非【{det_zh}】）"
@@ -296,7 +297,5 @@ class WashHandStateMachine:
             if detected_label in STEPS_ORDER:
                 det_zh = STEPS_ZH.get(detected_label, detected_label)
                 det_desc = STEPS_DESC.get(detected_label, "")
-                obs_t = self.contiguous_times.get(detected_label, 0.0)
-                progress_pct = int(min(1.0, obs_t / max(0.01, self.step_duration)) * 100)
-                return f"進行中：【{det_zh}】{det_desc}（該步驟進度 {progress_pct}%）"
+                return f"進行中：【{det_zh}】{det_desc}{conf_str}"
             return "請就位雙手，依洗手七字訣（內外夾弓大立腕）進行搓洗"

@@ -37,11 +37,15 @@ class HandDetector:
         min_tracking_confidence: float = 0.50,
         ghost_frames_threshold: int = 4,
         crop_split_screen: bool = False,
+        detection_scale: float = 1.5,   # 放大比例：1.0 = 不放大，1.5 = 放大 1.5 倍（改善小/遮擋手的偵測）
     ):
         self.mp_hands = mp.solutions.hands
         self.mp_draw = mp.solutions.drawing_utils
         self.mp_drawing_styles = mp.solutions.drawing_styles
         self.crop_split_screen = crop_split_screen
+        # 放大放影尺比：將全幅影像先放大再送入 MediaPipe，提升小手 / 遺擋手的偵測穩定性
+        # landmark 的 lm.x/lm.y 已經是相對制影像的 0~1 分數，轉換時用原始 w/h 所以座標不會偏移
+        self.detection_scale = max(1.0, float(detection_scale))
 
         # Primary tracker for continuous stream (stateful, uses tracking between frames)
         self.primary_hands = self.mp_hands.Hands(
@@ -172,12 +176,21 @@ class HandDetector:
                     detection_mode = "none"
         else:
             # Full-frame mode with stateful primary tracker
-            results = self.primary_hands.process(rgb_frame)
+            # 若 detection_scale > 1，先放大畫面再偵測（提升 landmark 品質）
+            # landmark 座標 lm.x/lm.y 已是相對比例，回乘原始 w/h 後座標自動正確
+            if self.detection_scale > 1.0:
+                dh = int(h * self.detection_scale)
+                dw = int(w * self.detection_scale)
+                detect_rgb = cv2.resize(rgb_frame, (dw, dh), interpolation=cv2.INTER_LINEAR)
+            else:
+                detect_rgb = rgb_frame
+
+            results = self.primary_hands.process(detect_rgb)
             if results.multi_hand_landmarks:
                 detection_mode = "fullframe"
             # If <2 hands found, try CLAHE enhancement
             if not results.multi_hand_landmarks or len(results.multi_hand_landmarks) < 2:
-                enhanced = _enhance_contrast_clahe(rgb_frame)
+                enhanced = _enhance_contrast_clahe(detect_rgb)   # CLAHE 也在放大圖上做
                 results_clahe = self.rescue_hands.process(enhanced)
                 n_orig = len(results.multi_hand_landmarks) if results.multi_hand_landmarks else 0
                 n_clahe = len(results_clahe.multi_hand_landmarks) if results_clahe.multi_hand_landmarks else 0

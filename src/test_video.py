@@ -238,8 +238,8 @@ def evaluate_video(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate video with Wash Hand Detector Pipeline")
-    parser.add_argument("--video", type=str, default="data/annotated_eval_yt.mp4", help="Path to input video")
-    parser.add_argument("--output", type=str, default=None, help="Optional output annotated video path")
+    parser.add_argument("--video", "--input", dest="video", type=str, default="data/annotated_eval_yt.mp4", help="Path to input video")
+    parser.add_argument("--output", "--output-video", dest="output", type=str, default=None, help="Optional output annotated video path")
     parser.add_argument("--model-type", type=str, default="rule", choices=["hybrid", "ml", "rule"])
     parser.add_argument("--guide-mode", type=str, default="free", choices=["free", "sequence"])
     parser.add_argument("--step-duration", type=float, default=1.0)

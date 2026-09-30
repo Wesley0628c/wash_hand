@@ -159,8 +159,12 @@ class WashHandHUD:
         target_str = f"  (目標: 【{STEPS_ZH.get(target_step, target_step)}】)" if (target_step and target_step != detected_label) else ""
         draw.text((banner_x + 22, banner_y + 12), f"當前動作：【 {curr_zh} 】{target_str}", fill=action_color, font=self.font_lg)
 
-        # Completed Steps Count indicator in card (if available)
-        if progress_summary is not None:
+        # Confidence indicator in card
+        if confidence > 0.0 and detected_label in STEPS_ORDER:
+            conf_pct = confidence * 100.0
+            conf_color = (100, 255, 160) if conf_pct >= 70.0 else (255, 200, 80) if conf_pct >= 40.0 else (180, 190, 200)
+            draw.text((banner_x + banner_w - 200, banner_y + 14), f"信心度：{conf_pct:.1f}%", fill=conf_color, font=self.font_md)
+        elif progress_summary is not None:
             done_cnt = progress_summary.get("completed_count", 0)
             total_cnt = progress_summary.get("total_steps", 7)
             status_summary_str = f"洗手進度：{done_cnt}/{total_cnt} 步"

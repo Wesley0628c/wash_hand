@@ -259,7 +259,7 @@ class WashHandPipeline:
             label, dt=dt, observation_weight=obs_weight
         )
 
-        feedback_msg = self.state_machine.get_fsm_feedback(label)
+        feedback_msg = self.state_machine.get_fsm_feedback(label, confidence=conf)
 
         if not obs_weight and not self.state_machine.is_completed:
             feedback_msg = "動作尚待確認／手部遮擋，暫停計時"

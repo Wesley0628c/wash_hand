@@ -231,6 +231,18 @@ def extract_hand_features(
 
         interlace_depth = min(left_to_right_interlace, right_to_left_interlace)
 
+        # 跨手指尖配對數量 (cross_finger_close_pairs)
+        # 16 組配對 (左4指尖 × 右4指尖)，計算在 0.40 掌長內的配對數
+        # 夾：手指穿插 → 多個非對應指也靠近 → pairs 高 (>= 6)
+        # 外：一手壓在另一手背上 → 對應指靠近，但非對應指較遠 → pairs 中 (3~6)
+        # 內：掌心相對 → 指尖未靠近 → pairs 低 (0~3)
+        CLOSE_THRESH = 0.40
+        cross_finger_close_pairs = 0
+        for _l in [INDEX_TIP, MIDDLE_TIP, RING_TIP, PINKY_TIP]:
+            for _r in [INDEX_TIP, MIDDLE_TIP, RING_TIP, PINKY_TIP]:
+                if euclidean_distance(left_hand[_l], right_hand[_r]) / avg_scale < CLOSE_THRESH:
+                    cross_finger_close_pairs += 1
+
         # Fingertip spread (cluster compactness for Fingertips / 立)
         left_spread = float(np.mean([
             euclidean_distance(left_hand[INDEX_TIP], left_hand[MIDDLE_TIP]),
@@ -287,6 +299,9 @@ def extract_hand_features(
             "thumb_dir_dot": thumb_dir_dot,
             "mean_tip_dist": float(np.mean(tip_distances)),
             "interlace_depth": float(interlace_depth),
+            "left_to_right_interlace_depth": float(left_to_right_interlace),
+            "right_to_left_interlace_depth": float(right_to_left_interlace),
+            "cross_finger_close_pairs": cross_finger_close_pairs,
             "min_fingertip_spread": min_fingertip_spread,
             "left_four_finger_spread": left_spread,
             "right_four_finger_spread": right_spread,
@@ -313,11 +328,15 @@ def extract_hand_features(
             "thumb_dir_dot": 0.0,
             "mean_tip_dist": 99.0,
             "interlace_depth": 99.0,
+            "left_to_right_interlace_depth": 99.0,
+            "right_to_left_interlace_depth": 99.0,
+            "cross_finger_close_pairs": 0,
             "min_fingertip_spread": 99.0,
             "left_four_finger_spread": 99.0,
             "right_four_finger_spread": 99.0,
             "min_four_finger_spread": 99.0,
             "interlace_alternations": 0,
+            "interlace_overlap_ratio": 0.0,
         }
 
     # 6. Velocity / Motion Features
@@ -360,6 +379,7 @@ def extract_hand_features(
     left_four_finger_spread = 99.0
     right_four_finger_spread = 99.0
     interlace_alternations = 0
+    interlace_overlap_ratio = 0.0
 
     if has_left and has_right:
         avg_scale = max((left_scale + right_scale) / 2.0, 1e-4)
@@ -377,12 +397,24 @@ def extract_hand_features(
         # Interleaving sequence: project tips onto right palm's lateral width axis
         axis = right_hand[INDEX_MCP, :2] - right_hand[PINKY_MCP, :2]
         axis_len = np.linalg.norm(axis)
+        interlace_overlap_ratio = 0.0
         if axis_len > 1e-6:
             axis = axis / axis_len
             l_proj = [(left_hand[tid, :2] @ axis, 'L') for tid in TIP_WITHOUT_THUMB]
             r_proj = [(right_hand[tid, :2] @ axis, 'R') for tid in TIP_WITHOUT_THUMB]
             comb = sorted(l_proj + r_proj, key=lambda x: x[0])
             interlace_alternations = sum(1 for i in range(len(comb) - 1) if comb[i][1] != comb[i+1][1])
+
+            # interlace_overlap_ratio: fraction of the combined projection span that is
+            # shared between L and R fingertips. True interlace → both ranges fully overlap
+            # (ratio near 1.0); 內/外 → hands side-by-side, little or no overlap (ratio ~0).
+            l_vals = [v for v, h in l_proj]
+            r_vals = [v for v, h in r_proj]
+            l_min, l_max = min(l_vals), max(l_vals)
+            r_min, r_max = min(r_vals), max(r_vals)
+            overlap_len = max(0.0, min(l_max, r_max) - max(l_min, r_min))
+            total_span  = max(l_max, r_max) - min(l_min, r_min)
+            interlace_overlap_ratio = float(overlap_len / total_span) if total_span > 1e-6 else 0.0
 
         for active, passive, angles in ((left_hand, right_hand, left_angles),
                                          (right_hand, left_hand, right_angles)):
@@ -414,6 +446,7 @@ def extract_hand_features(
     inter_hand_features["right_four_finger_spread"] = right_four_finger_spread
     inter_hand_features["min_four_finger_spread"] = min(left_four_finger_spread, right_four_finger_spread)
     inter_hand_features["interlace_alternations"] = interlace_alternations
+    inter_hand_features["interlace_overlap_ratio"] = interlace_overlap_ratio
     inter_hand_features["back_contacts"] = directional_back_contacts(
         left_hand if has_left else None, right_hand if has_right else None,
         prev_left_hand, prev_right_hand, dt,
